@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rekap – Absensi PPNPN BPKK Kendari</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  /* ==========================================
+     CSS REKAP (DITENGAHKAN + HEADER BIRU)
+     ========================================== */
+
+  /* 1. Body */
+  body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100vh;
+    background-color: #f1f5f9;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* 2. Navbar Atas */
+  .top-navbar {
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 16px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .brand-area {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .brand-text strong { display: block; font-size: 1.2rem; color: #1a56db; font-weight: 800; }
+  .brand-text span { font-size: 0.85rem; color: #64748b; font-weight: 500; }
+
+  .btn-nav {
+    display: flex; align-items: center; gap: 8px;
+    background: #eff6ff; color: #1a56db;
+    border: 1px solid #bfdbfe; padding: 10px 20px;
+    border-radius: 8px; text-decoration: none;
+    font-weight: 600; font-size: 0.9rem; transition: 0.2s;
+  }
+  .btn-nav:hover { background: #dbeafe; }
+
+  /* 3. Area Konten Utama — DITENGAHKAN */
+  .app-main {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 40px;
+    display: block;
+    box-sizing: border-box;
+  }
+
+  /* 4. Kotak Putih Utama */
+  .card {
+    width: 100%;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    box-sizing: border-box;
+    overflow: hidden; /* agar header biru mengikuti sudut membulat */
+  }
+
+  /* ===== HEADER BIRU UNTUK JUDUL BESAR ===== */
+  .card-header {
+    background: linear-gradient(135deg, #1a56db 0%, #1e40af 100%);
+    color: #ffffff;
+    padding: 32px 40px;
+  }
+  .card-header h1 {
+    margin: 0 0 6px 0;
+    font-size: 1.65rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .card-header p {
+    margin: 0;
+    color: #dbeafe;
+    font-size: 0.95rem;
+    font-weight: 400;
+  }
+
+  /* Isi kartu (setelah header biru) */
+  .card-body {
+    padding: 32px 40px 40px;
+  }
+
+  /* Form Filter */
+  .filters {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 32px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .field label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #334155;
+  }
+  .field select {
+    padding: 12px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: #fff;
+    min-width: 200px;
+    outline: none;
+  }
+  .field select:focus { border-color: var(--primary); }
+
+  .btn-tampilkan {
+    background: var(--primary);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: 0.2s;
+    height: 46px;
+  }
+  .btn-tampilkan:hover { background: var(--primary-hover); }
+
+  /* Statistik */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+  .stat-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+  }
+  .stat-card b {
+    display: block;
+    font-size: 2rem;
+    margin-bottom: 4px;
+  }
+  .stat-card span {
+    font-size: 0.95rem;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  /* Tabel Data */
+  .wrap {
+    width: 100%;
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th, td {
+    text-align: left;
+    padding: 16px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 0.95rem;
+    color: #1e293b;
+  }
+  th {
+    background: #f8fafc;
+    font-weight: 700;
+    color: #475569;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Badge Status */
+  .tag {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+  .tag.ok { background: #d1fae5; color: #059669; }
+  .tag.late { background: #fef3c7; color: #d97706; }
+  .tag.no { background: #fee2e2; color: #dc2626; }
+
+  /* Responsif Mobile */
+  @media (max-width: 768px) {
+    .top-navbar { flex-direction: column; align-items: flex-start; gap: 16px; padding: 16px; }
+    .btn-nav { width: 100%; justify-content: center; }
+    .app-main { padding: 16px; max-width: 100%; }
+    .card-header { padding: 24px 20px; }
+    .card-header h1 { font-size: 1.35rem; }
+    .card-body { padding: 20px; }
+    .filters { flex-direction: column; align-items: stretch; }
+    .field select { width: 100%; min-width: 0; }
+    .stats { grid-template-columns: 1fr; gap: 12px; }
+    .btn-tampilkan { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ================= NAVBAR ATAS ================= -->
+  <header class="top-navbar">
+    <div class="brand-area">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#1a56db" stroke-width="2">
+        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+        <polyline points="2 17 12 22 22 17"></polyline>
+        <polyline points="2 12 12 17 22 12"></polyline>
+      </svg>
+      <div class="brand-text">
+        <strong>BPKK Kendari</strong>
+        <span>Sistem Presensi PPNPN</span>
+      </div>
+    </div>
+
+    <a href="pegawai.html" class="btn-nav">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+      Kembali ke Beranda
+    </a>
+  </header>
+
+  <!-- ================= KONTEN UTAMA (DITENGAHKAN) ================= -->
+  <main class="app-main">
+
+    <div class="card">
+
+      <!-- ===== HEADER BIRU (JUDUL BESAR) ===== -->
+      <div class="card-header">
+        <h1>Rekap Kehadiran Saya</h1>
+        <p>Pilih bulan dan tahun untuk melihat riwayat absensi.</p>
+      </div>
+
+      <!-- ===== ISI KARTU ===== -->
+      <div class="card-body">
+
+        <!-- Filter -->
+        <form class="filters" onsubmit="event.preventDefault(); alert('Fitur filter masih simulasi.');">
+          <div class="field">
+            <label for="bln">Bulan</label>
+            <select id="bln" name="bln">
+              <option>September</option>
+              <option selected>Oktober</option>
+              <option>November</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="thn">Tahun</label>
+            <select id="thn" name="thn">
+              <option selected>2026</option>
+              <option>2025</option>
+            </select>
+          </div>
+          <div class="field">
+            <button class="btn-tampilkan" type="submit">Tampilkan</button>
+          </div>
+        </form>
+
+        <!-- Statistik -->
+        <div class="stats">
+          <div class="stat-card">
+            <b style="color: #059669;">13</b>
+            <span>Hadir</span>
+          </div>
+          <div class="stat-card">
+            <b style="color: #d97706;">3</b>
+            <span>Terlambat</span>
+          </div>
+          <div class="stat-card">
+            <b style="color: #dc2626;">1</b>
+            <span>Tidak Hadir</span>
+          </div>
+        </div>
+
+        <!-- Tabel Rekap -->
+        <div class="wrap">
+          <table>
+            <caption style="text-align:left; padding-bottom: 12px; color: #64748b; font-size: 0.9rem;">Data contoh (dummy)</caption>
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Masuk</th>
+                <th>Pulang</th>
+                <th>Status</th>
+                <th>Kegiatan</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>1 Okt 2026</td><td>07:46</td><td>16:10</td><td><span class="tag ok">Hadir</span></td><td>Melayani pengaduan</td></tr>
+              <tr><td>2 Okt 2026</td><td>08:12</td><td>16:05</td><td><span class="tag late">Terlambat</span></td><td>Input data layanan</td></tr>
+              <tr><td>5 Okt 2026</td><td>-</td><td>-</td><td><span class="tag no">Tidak hadir</span></td><td>Izin</td></tr>
+              <tr><td>6 Okt 2026</td><td>07:52</td><td>16:20</td><td><span class="tag ok">Hadir</span></td><td>Rekap dokumen masuk</td></tr>
+              <tr><td>7 Okt 2026</td><td>07:48</td><td>16:15</td><td><span class="tag ok">Hadir</span></td><td>Rapat koordinasi</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div><!-- /card-body -->
+
+    </div><!-- /card -->
+
+  </main>
+
+</body>
+</html>
