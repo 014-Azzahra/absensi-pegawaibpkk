@@ -37,6 +37,7 @@
   <div class="form-container">
     <h2>Selamat datang.</h2>
     <p class="subtitle">Masuk dengan akun pegawai Anda untuk mencatat dan melihat riwayat kehadiran.</p>
+    <p style="font-size:12px;color:#64748b;margin:8px 0 14px">Mode demo: gunakan ID PPNPN001 sampai PPNPN030 atau nama pada data pegawai dummy.</p>
 
     <form id="form-login">
       <div class="field">
@@ -79,46 +80,30 @@
 </div>
 
 <script>
-  // 1. Fitur Toggle Lihat Sandi
-  const togglePassword = document.getElementById('toggle-password');
-  const passwordInput = document.getElementById('pass');
-
-  togglePassword.addEventListener('click', function () {
-    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-    passwordInput.setAttribute('type', type);
-    
-    // Ubah warna ikon saat aktif (biru)
-    if (type === 'text') {
-      this.style.color = '#1a56db';
-    } else {
-      this.style.color = '#94a3b8';
+const SESSION_KEY = 'bpkk_user_aktif';
+document.getElementById('toggle-password')?.addEventListener('click', function () {
+  const input = document.getElementById('pass');
+  input.type = input.type === 'password' ? 'text' : 'password';
+});
+document.getElementById('form-login').addEventListener('submit', async function (event) {
+  event.preventDefault();
+  const button = document.getElementById('btn-submit');
+  const label = document.getElementById('btn-text');
+  const username = document.getElementById('user').value.trim().toLowerCase();
+  button.disabled = true; label.textContent = 'Memproses...';
+  try {
+    const response = await fetch('js/data/pegawai.json');
+    const pegawai = await response.json();
+    const selected = pegawai.find(p => p.id.toLowerCase() === username || p.nama.toLowerCase() === username);
+    if (!selected) {
+      alert('Akun demo tidak ditemukan. Gunakan ID PPNPN001–PPNPN030 atau nama pegawai pada data dummy.');
+      return;
     }
-  });
-
-  // 2. Simulasi Login & Animasi Loading
-  document.getElementById('form-login').addEventListener('submit', function(e) {
-    e.preventDefault(); // Mencegah form langsung pindah halaman
-    
-    const btn = document.getElementById('btn-submit');
-    const btnText = document.getElementById('btn-text');
-    const btnArrow = document.getElementById('btn-arrow');
-    const user = document.getElementById('user').value.toLowerCase();
-    
-    // Ubah tampilan tombol jadi loading
-    btnText.innerText = 'Memproses...';
-    btnArrow.style.display = 'none'; // Hilangkan panah
-    btn.style.opacity = '0.8';
-    btn.style.pointerEvents = 'none'; // Matikan klik ganda
-
-    // Simulasi delay loading selama 1 detik sebelum pindah halaman
-    setTimeout(() => {
-      if (user.includes('admin')) {
-        window.location.href = 'admin.html';
-      } else {
-        window.location.href = 'pegawai.html';
-      }
-    }, 1000);
-  });
+    localStorage.setItem(SESSION_KEY, selected.id);
+    location.href = 'pegawai.html';
+  } catch (error) { alert('Data pegawai gagal dimuat. Jalankan proyek melalui Live Server.'); }
+  finally { button.disabled = false; label.textContent = 'Masuk ke presensi'; }
+});
 </script>
 </body>
 </html>
