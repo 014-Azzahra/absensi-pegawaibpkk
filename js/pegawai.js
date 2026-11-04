@@ -66,7 +66,7 @@ function bukaKamera(target) {
 
 async function prosesFoto(event, target) {
   try {
-    const dataUrl = await kompresFoto(event.target.files[0]);
+    const dataUrl = await PresensiKamera.kompresFoto(event.target.files[0]);
     if (target === 'masuk') fotoMasuk = dataUrl; else fotoPulang = dataUrl;
     $(`preview-${target}`).src = dataUrl;
     $(`preview-${target}`).hidden = false;
@@ -76,7 +76,7 @@ async function prosesFoto(event, target) {
 
 async function ambilLokasi() {
   try {
-    const lokasi = await ambilLokasiBrowser();
+    const lokasi = await PresensiLokasi.ambil(KANTOR, RADIUS_KANTOR);
     posisiTerakhir = lokasi;
     setPesan('pesan-lokasi', `Lokasi sesuai. Jarak ke kantor sekitar ${Math.round(lokasi.jarak)} meter (akurasi GPS ±${Math.round(lokasi.accuracy)} m).`, 'success');
     return lokasi;
@@ -85,18 +85,6 @@ async function ambilLokasi() {
     throw error;
   }
 }
-
-
-function kompresFoto(file, maxWidth = 720, quality = 0.62) {
-  return new Promise((resolve, reject) => {
-    if (!file || !file.type.startsWith('image/')) return reject(new Error('Pilih file foto yang valid.'));
-    const reader = new FileReader(); reader.onerror = () => reject(new Error('Foto gagal dibaca.'));
-    reader.onload = () => { const img = new Image(); img.onerror = () => reject(new Error('Foto tidak dapat dibuka.')); img.onload = () => { const scale = Math.min(1, maxWidth / img.width); const canvas = document.createElement('canvas'); canvas.width = Math.round(img.width * scale); canvas.height = Math.round(img.height * scale); canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height); resolve(canvas.toDataURL('image/jpeg', quality)); }; img.src = reader.result; };
-    reader.readAsDataURL(file);
-  });
-}
-function hitungJarak(lat1, lon1, lat2, lon2) { const R=6371000, rad=v=>v*Math.PI/180, dLat=rad(lat2-lat1), dLon=rad(lon2-lon1), a=Math.sin(dLat/2)**2+Math.cos(rad(lat1))*Math.cos(rad(lat2))*Math.sin(dLon/2)**2; return 2*R*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)); }
-function ambilLokasiBrowser() { return new Promise((resolve,reject)=>{ if(!navigator.geolocation)return reject(new Error('Browser tidak mendukung Geolocation.')); navigator.geolocation.getCurrentPosition(pos=>{const {latitude,longitude,accuracy}=pos.coords;const jarak=hitungJarak(latitude,longitude,KANTOR.lat,KANTOR.lon);if(jarak>RADIUS_KANTOR)return reject(new Error(`Di luar radius kantor. Jarak terukur ${Math.round(jarak)} meter (maksimal 500 meter).`));resolve({latitude,longitude,accuracy,jarak});},err=>reject(new Error(err.code===1?'Izin lokasi ditolak. Aktifkan akses lokasi pada browser.':'Lokasi tidak berhasil diperoleh. Coba lagi di area terbuka.'),{enableHighAccuracy:true,timeout:15000,maximumAge:0})); }
 
 function statusTerlambat(jam) { return jam > BATAS_TERLAMBAT ? 'terlambat' : 'hadir'; }
 
