@@ -51,7 +51,7 @@ function ubahStatusKehadiran() {
   const status = $('status-kehadiran').value;
   const hadirDiKantor = status === 'hadir';
   $('area-izin').hidden = hadirDiKantor || !status;
-  $('area-kamera-masuk').hidden = !hadirDiKantor;
+  $('area-kamera-masuk').hidden = !status;
   $('area-lokasi').hidden = !hadirDiKantor;
   $('alasan-izin').required = !hadirDiKantor && !!status;
   $('btn-absen-masuk').textContent = status === 'hadir' ? 'Kirim Absen Masuk' : 'Kirim Izin';
@@ -96,10 +96,10 @@ async function kirimAbsenMasuk() {
     return setPesan('pesan-masuk', 'Anda sudah mengisi absensi hari ini.', 'error');
 
   let lokasi = null, foto = '';
+  if (!fotoMasuk) return setPesan('pesan-masuk', 'Foto selfie wajib dilampirkan sebelum absen.', 'error');
+  foto = fotoMasuk;
   if (status === 'hadir') {
-    if (!fotoMasuk) return setPesan('pesan-masuk', 'Foto selfie wajib dilampirkan sebelum absen.', 'error');
     try { lokasi = await ambilLokasi(); } catch (e) { return setPesan('pesan-masuk', e.message, 'error'); }
-    foto = fotoMasuk;
   } else if (!$('alasan-izin').value.trim()) {
     return setPesan('pesan-masuk', 'Alasan izin/sakit/cuti wajib diisi.', 'error');
   }

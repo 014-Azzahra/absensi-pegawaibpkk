@@ -7,7 +7,7 @@ Pengembangan minggu kedua dari antarmuka statis menjadi aplikasi front-end dinam
 - Jam dan tanggal digital real-time, serta identitas pegawai.
 - Pilihan status hadir, izin, sakit, dan cuti.
 - Absen hadir wajib foto dan validasi lokasi maksimal 500 meter dari kantor.
-- Pengajuan izin/sakit/cuti wajib mengisi alasan; tidak memerlukan validasi radius kantor.
+- Pengajuan izin/sakit/cuti wajib foto dan alasan; tidak memerlukan validasi radius kantor.
 - Foto dikompres menjadi JPEG sebelum disimpan di localStorage.
 - Tidak dapat absen masuk dua kali dalam sehari; absen pulang hanya tersedia setelah absen masuk.
 - Kegiatan dan foto wajib sebelum absen pulang dikirim.
