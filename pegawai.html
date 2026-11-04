@@ -1,28 +1,623 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Absensi Pegawai | PPNPN BPKK Kendari</title>
-<link rel="stylesheet" href="css/style.css">
-<style>
-:root{--blue:#1a56db;--ink:#1e293b;--muted:#64748b;--line:#e2e8f0}*{box-sizing:border-box}body{margin:0;background:#f1f5f9;color:var(--ink);font-family:'Segoe UI',system-ui,sans-serif}.top-navbar{background:#fff;border-bottom:1px solid var(--line);padding:14px 5%;display:flex;justify-content:space-between;align-items:center;gap:12px}.brand-area{display:flex;align-items:center;gap:12px}.brand-area img{width:45px;height:45px;object-fit:contain}.brand-text strong{display:block;color:var(--blue)}.brand-text span{font-size:12px;color:var(--muted)}.btn-logout,.btn-nav{padding:9px 14px;border-radius:8px;text-decoration:none;border:1px solid #bfdbfe;background:#eff6ff;color:var(--blue);font-weight:600;cursor:pointer}.app-main{max-width:850px;margin:28px auto;padding:0 16px}.absensi-wrapper{display:grid;gap:16px}.header-card{background:linear-gradient(120deg,#173b8c,#3478e8);color:#fff;border-radius:16px;padding:24px;display:flex;justify-content:space-between;align-items:center;gap:18px}.header-card h2{margin:0 0 5px;font-size:22px}.header-card p{margin:0;opacity:.88}.datetime-box{text-align:right}.datetime-box h3{font-size:30px;margin:0}.datetime-box span{font-size:13px}.form-card,.status-card{background:white;border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:0 5px 18px #0f172a08}.status-card{display:flex;justify-content:space-between;gap:12px;align-items:center}.status-card small{color:var(--muted)}.tab-container{display:flex;gap:8px;border-bottom:1px solid var(--line);margin-bottom:20px}.tab-btn{border:0;background:none;padding:12px 18px;color:var(--muted);font-weight:700;cursor:pointer;border-bottom:3px solid transparent}.tab-btn.active{color:var(--blue);border-color:var(--blue)}.tab-btn:disabled{opacity:.4;cursor:not-allowed}.tab-content{display:none}.tab-content.active{display:block}.form-group{display:grid;gap:8px;margin:16px 0}.form-group label{font-weight:650;font-size:14px}.form-control{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:12px;font:inherit;background:#fff}.form-control:focus{outline:2px solid #bfdbfe;border-color:var(--blue)}textarea.form-control{min-height:90px;resize:vertical}.btn-submit{background:var(--blue);color:white;border:0;border-radius:8px;padding:13px 18px;font-weight:700;cursor:pointer;width:100%;margin-top:12px}.btn-submit:disabled{opacity:.45;cursor:not-allowed}.camera-tools{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.camera-tools button{padding:10px 14px;border:1px solid #bfdbfe;background:#eff6ff;color:var(--blue);border-radius:8px;font-weight:600;cursor:pointer}.preview{width:180px;max-height:180px;object-fit:cover;border-radius:10px;border:1px solid var(--line);margin-top:10px}.notice{padding:10px 12px;border-radius:8px;margin-top:10px;font-size:13px}.notice:empty{display:none}.notice.info{background:#eff6ff;color:#1d4ed8}.notice.success{background:#ecfdf5;color:#047857}.notice.error{background:#fef2f2;color:#b91c1c}.hint{color:var(--muted);font-size:13px;margin:8px 0}.hidden,[hidden]{display:none!important}.status-value{font-weight:700;color:var(--blue)}@media(max-width:600px){.header-card{display:block}.datetime-box{text-align:left;margin-top:18px}.top-navbar{padding:12px 16px}.form-card{padding:16px}.status-card{align-items:flex-start;flex-direction:column}}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absensi Pegawai | PPNPN BPKK Kendari</title>
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        :root {
+            --blue: #1a56db;
+            --ink: #1e293b;
+            --muted: #64748b;
+            --line: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f1f5f9;
+            color: var(--ink);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        .top-navbar {
+            background: #fff;
+            border-bottom: 1px solid var(--line);
+            padding: 14px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-area img {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+        }
+
+        .brand-text strong {
+            display: block;
+            color: var(--blue);
+        }
+
+        .brand-text span {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .btn-logout,
+        .btn-nav {
+            padding: 9px 14px;
+            border-radius: 8px;
+            text-decoration: none;
+            border: 1px solid #bfdbfe;
+            background: #eff6ff;
+            color: var(--blue);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .app-main {
+            max-width: 850px;
+            margin: 28px auto;
+            padding: 0 16px;
+        }
+
+        .absensi-wrapper {
+            display: grid;
+            gap: 16px;
+        }
+
+        .header-card {
+            background: linear-gradient(120deg, #173b8c, #3478e8);
+            color: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .header-card h2 {
+            margin: 0 0 5px;
+            font-size: 22px;
+        }
+
+        .header-card p {
+            margin: 0;
+            opacity: .88;
+        }
+
+        .datetime-box {
+            text-align: right;
+        }
+
+        .datetime-box h3 {
+            font-size: 30px;
+            margin: 0;
+        }
+
+        .datetime-box span {
+            font-size: 13px;
+        }
+
+        .form-card,
+        .status-card {
+            background: white;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 22px;
+            box-shadow: 0 5px 18px #0f172a08;
+        }
+
+        .status-card {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .status-card small {
+            color: var(--muted);
+        }
+
+        .tab-container {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid var(--line);
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            border: 0;
+            background: none;
+            padding: 12px 18px;
+            color: var(--muted);
+            font-weight: 700;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-btn.active {
+            color: var(--blue);
+            border-color: var(--blue);
+        }
+
+        .tab-btn:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            display: grid;
+            gap: 8px;
+            margin: 16px 0;
+        }
+
+        .form-group label {
+            font-weight: 650;
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 12px;
+            font: inherit;
+            background: #fff;
+        }
+
+        .form-control:focus {
+            outline: 2px solid #bfdbfe;
+            border-color: var(--blue);
+        }
+
+        textarea.form-control {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        .btn-submit {
+            background: var(--blue);
+            color: white;
+            border: 0;
+            border-radius: 8px;
+            padding: 13px 18px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 12px;
+        }
+
+        .btn-submit:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+        }
+
+        .camera-tools {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .camera-tools button,
+        .camera-box button {
+            padding: 11px 16px;
+            border: none;
+            border-radius: 8px;
+            background: var(--blue);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .camera-box {
+            margin-top: 12px;
+            padding: 12px;
+            background: #f8fafc;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+        }
+
+        .camera-box video {
+            width: 100%;
+            max-height: 400px;
+            object-fit: cover;
+            border-radius: 10px;
+            background: #0f172a;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .preview {
+            width: 180px;
+            max-height: 180px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            margin-top: 10px;
+        }
+
+        .notice {
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+
+        .notice:empty {
+            display: none;
+        }
+
+        .notice.info {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .notice.success {
+            background: #ecfdf5;
+            color: #047857;
+        }
+
+        .notice.error {
+            background: #fef2f2;
+            color: #b91c1c;
+        }
+
+        .hint {
+            color: var(--muted);
+            font-size: 13px;
+            margin: 8px 0;
+        }
+
+        .hidden,
+        [hidden] {
+            display: none !important;
+        }
+
+        .status-value {
+            font-weight: 700;
+            color: var(--blue);
+        }
+
+        @media (max-width: 600px) {
+            .header-card {
+                display: block;
+            }
+
+            .datetime-box {
+                text-align: left;
+                margin-top: 18px;
+            }
+
+            .top-navbar {
+                padding: 12px 16px;
+            }
+
+            .form-card {
+                padding: 16px;
+            }
+
+            .status-card {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
+
 <body>
-<header class="top-navbar"><div class="brand-area"><img src="img/logo-bpkk.png" alt="Logo BPKK"><div class="brand-text"><strong>Presensi PPNPN</strong><span>Balai Perluasan Kesempatan Kerja Kendari</span></div></div><div class="nav-actions"><a class="btn-nav" href="rekap.html">Rekap Saya</a><button class="btn-logout" id="btn-keluar" type="button">Keluar</button></div></header>
-<main class="app-main"><div class="absensi-wrapper">
-<section class="header-card"><div><h2 id="nama-pegawai">Memuat nama pegawai...</h2><p id="jabatan-pegawai">Memuat posisi...</p></div><div class="datetime-box"><h3 id="jam-digital">00:00:00</h3><span id="tanggal-digital"></span></div></section>
-<section class="status-card"><div><small>Status absensi hari ini</small><div class="status-value" id="status-hari-ini">Memeriksa...</div></div><div><small>Ketentuan lokasi</small><div><strong>Radius maksimal 500 meter</strong></div></div></section>
-<section class="form-card"><div class="tab-container"><button class="tab-btn active" id="btn-tab-masuk" type="button">Absen Masuk</button><button class="tab-btn" id="btn-tab-pulang" type="button" disabled>Absen Pulang</button></div>
-<div class="tab-content active" id="content-masuk">
-<div class="form-group"><label for="status-kehadiran">Pilih status kehadiran</label><select class="form-control" id="status-kehadiran" required><option value="">-- Pilih status --</option><option value="hadir">Hadir di kantor</option><option value="izin">Izin</option><option value="sakit">Sakit</option><option value="cuti">Cuti</option></select></div>
-<div class="form-group" id="area-izin" hidden><label for="alasan-izin">Alasan izin / sakit / cuti</label><textarea class="form-control" id="alasan-izin" placeholder="Jelaskan alasan tidak hadir..."></textarea><p class="hint">Untuk izin, sakit, atau cuti, lokasi tidak harus berada dalam radius kantor.</p></div>
-<div id="area-kamera-masuk" hidden><div class="form-group"><label>Foto selfie presensi (wajib)</label><div class="camera-tools"><button type="button" id="btn-kamera-masuk">Ambil foto dari kamera</button><input type="file" id="kamera-masuk" accept="image/*" capture="user" hidden></div><img id="preview-masuk" class="preview" alt="Pratinjau foto masuk" hidden><div id="pesan-foto-masuk" class="notice"></div></div><div class="form-group" id="area-lokasi"><label>Verifikasi lokasi kantor</label><p class="hint">Lokasi akan diminta saat tombol absen ditekan. Pastikan GPS aktif dan izinkan akses lokasi.</p><div id="pesan-lokasi" class="notice"></div></div></div>
-<button class="btn-submit" id="btn-absen-masuk" type="button" disabled>Kirim Absen Masuk</button><div id="pesan-masuk" class="notice" aria-live="polite"></div>
-</div>
-<div class="tab-content" id="content-pulang"><p class="hint" id="hint-pulang">Absen masuk hadir harus tercatat terlebih dahulu.</p><div class="form-group"><label for="kegiatan-pulang">Kegiatan hari ini (wajib)</label><textarea class="form-control" id="kegiatan-pulang" placeholder="Tuliskan ringkasan kegiatan yang dilakukan hari ini..."></textarea></div><div class="form-group"><label>Foto selfie absen pulang (wajib)</label><div class="camera-tools"><button type="button" id="btn-kamera-pulang">Ambil foto dari kamera</button><input type="file" id="kamera-pulang" accept="image/*" capture="user" hidden></div><img id="preview-pulang" class="preview" alt="Pratinjau foto pulang" hidden><div id="pesan-foto-pulang" class="notice"></div></div><button class="btn-submit" id="btn-absen-pulang" type="button" disabled>Kirim Absen Pulang</button><div id="pesan-pulang" class="notice" aria-live="polite"></div></div>
-</section></div></main>
+
+<header class="top-navbar">
+    <div class="brand-area">
+        <img src="img/logo-bpkk.png" alt="Logo BPKK">
+
+        <div class="brand-text">
+            <strong>Presensi PPNPN</strong>
+            <span>Balai Perluasan Kesempatan Kerja Kendari</span>
+        </div>
+    </div>
+
+    <div class="nav-actions">
+        <a class="btn-nav" href="rekap.html">Rekap Saya</a>
+        <button class="btn-logout" id="btn-keluar" type="button">
+            Keluar
+        </button>
+    </div>
+</header>
+
+<main class="app-main">
+    <div class="absensi-wrapper">
+
+        <section class="header-card">
+            <div>
+                <h2 id="nama-pegawai">Memuat nama pegawai...</h2>
+                <p id="jabatan-pegawai">Memuat posisi...</p>
+            </div>
+
+            <div class="datetime-box">
+                <h3 id="jam-digital">00:00:00</h3>
+                <span id="tanggal-digital"></span>
+            </div>
+        </section>
+
+        <section class="status-card">
+            <div>
+                <small>Status absensi hari ini</small>
+                <div class="status-value" id="status-hari-ini">
+                    Memeriksa...
+                </div>
+            </div>
+
+            <div>
+                <small>Ketentuan lokasi</small>
+                <div>
+                    <strong>Radius maksimal 500 meter</strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="form-card">
+
+            <div class="tab-container">
+                <button
+                    class="tab-btn active"
+                    id="btn-tab-masuk"
+                    type="button">
+                    Absen Masuk
+                </button>
+
+                <button
+                    class="tab-btn"
+                    id="btn-tab-pulang"
+                    type="button"
+                    disabled>
+                    Absen Pulang
+                </button>
+            </div>
+
+            <!-- FORM ABSEN MASUK -->
+            <div class="tab-content active" id="content-masuk">
+
+                <div class="form-group">
+                    <label for="status-kehadiran">
+                        Pilih status kehadiran
+                    </label>
+
+                    <select
+                        class="form-control"
+                        id="status-kehadiran"
+                        required>
+
+                        <option value="">-- Pilih status --</option>
+                        <option value="hadir">Hadir di kantor</option>
+                        <option value="izin">Izin</option>
+                        <option value="sakit">Sakit</option>
+                        <option value="cuti">Cuti</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="area-izin" hidden>
+                    <label for="alasan-izin">
+                        Alasan izin / sakit / cuti
+                    </label>
+
+                    <textarea
+                        class="form-control"
+                        id="alasan-izin"
+                        placeholder="Jelaskan alasan tidak hadir..."></textarea>
+
+                    <p class="hint">
+                        Untuk izin, sakit, atau cuti, lokasi tidak harus
+                        berada dalam radius kantor.
+                    </p>
+                </div>
+
+                <!-- KAMERA MASUK -->
+                <div
+                    class="form-group"
+                    id="area-kamera-masuk"
+                    hidden>
+
+                    <label>Foto absen masuk (wajib)</label>
+
+                    <div class="camera-tools">
+                        <button type="button" id="btn-kamera-masuk">
+                            Buka Kamera
+                        </button>
+                    </div>
+
+                    <div
+                        id="kamera-live-masuk"
+                        class="camera-box"
+                        hidden>
+
+                        <video
+                            id="video-masuk"
+                            autoplay
+                            playsinline></video>
+
+                        <button type="button" id="btn-ambil-masuk">
+                            Ambil Foto
+                        </button>
+
+                        <canvas id="canvas-masuk" hidden></canvas>
+                    </div>
+
+                    <img
+                        id="preview-masuk"
+                        class="preview"
+                        alt="Pratinjau foto masuk"
+                        hidden>
+
+                    <div
+                        id="konfirmasi-masuk"
+                        class="camera-tools"
+                        hidden>
+
+                        <button type="button" id="btn-ulangi-masuk">
+                            Ulangi Foto
+                        </button>
+
+                        <button type="button" id="btn-gunakan-masuk">
+                            Gunakan Foto
+                        </button>
+                    </div>
+
+                    <div
+                        id="pesan-foto-masuk"
+                        class="notice"></div>
+                </div>
+
+                <!-- VALIDASI LOKASI MASUK -->
+                <div
+                    id="area-lokasi"
+                    class="form-group"
+                    hidden>
+
+                    <label>Validasi lokasi kantor</label>
+
+                    <div
+                        id="pesan-lokasi"
+                        class="notice"></div>
+                </div>
+
+                <button
+                    class="btn-submit"
+                    id="btn-absen-masuk"
+                    type="button"
+                    disabled>
+                    Kirim Absen Masuk
+                </button>
+
+                <div
+                    id="pesan-masuk"
+                    class="notice"
+                    aria-live="polite"></div>
+
+            </div>
+
+            <!-- FORM ABSEN PULANG -->
+            <div class="tab-content" id="content-pulang">
+
+                <p class="hint" id="hint-pulang">
+                    Absen masuk hadir harus tercatat terlebih dahulu.
+                </p>
+
+                <div class="form-group">
+                    <label for="kegiatan-pulang">
+                        Kegiatan hari ini (wajib)
+                    </label>
+
+                    <textarea
+                        class="form-control"
+                        id="kegiatan-pulang"
+                        placeholder="Tuliskan ringkasan kegiatan yang dilakukan hari ini..."></textarea>
+                </div>
+
+                <!-- KAMERA PULANG -->
+                <div
+                    class="form-group"
+                    id="area-kamera-pulang">
+
+                    <label>Foto selfie absen pulang (wajib)</label>
+
+                    <div class="camera-tools">
+                        <button type="button" id="btn-kamera-pulang">
+                            Buka Kamera
+                        </button>
+                    </div>
+
+                    <div
+                        id="kamera-live-pulang"
+                        class="camera-box"
+                        hidden>
+
+                        <video
+                            id="video-pulang"
+                            autoplay
+                            playsinline></video>
+
+                        <button type="button" id="btn-ambil-pulang">
+                            Ambil Foto
+                        </button>
+
+                        <canvas id="canvas-pulang" hidden></canvas>
+                    </div>
+
+                    <img
+                        id="preview-pulang"
+                        class="preview"
+                        alt="Pratinjau foto pulang"
+                        hidden>
+
+                    <div
+                        id="konfirmasi-pulang"
+                        class="camera-tools"
+                        hidden>
+
+                        <button type="button" id="btn-ulangi-pulang">
+                            Ulangi Foto
+                        </button>
+
+                        <button type="button" id="btn-gunakan-pulang">
+                            Gunakan Foto
+                        </button>
+                    </div>
+
+                    <div
+                        id="pesan-foto-pulang"
+                        class="notice"></div>
+                </div>
+
+                <!-- TOMBOL KIRIM ABSEN PULANG -->
+                <button
+                    class="btn-submit"
+                    id="btn-absen-pulang"
+                    type="button"
+                    disabled>
+                    Kirim Absen Pulang
+                </button>
+
+                <div
+                    id="pesan-pulang"
+                    class="notice"
+                    aria-live="polite"></div>
+
+            </div>
+
+        </section>
+
+    </div>
+</main>
+
 <script src="js/kamera.js"></script>
 <script src="js/lokasi.js"></script>
 <script src="js/pegawai.js"></script>
-</body></html>
+
+</body>
+</html>
