@@ -43,7 +43,7 @@
         <label for="user">Nama pengguna</label>
         <div class="input-with-icon">
           <svg class="icon-left" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-          <input id="user" name="user" autocomplete="username" placeholder="Masukkan nama pengguna" required>
+          <input id="user" name="user" autocomplete="username" placeholder="Username atau ID pegawai (mis. ppnpn001)" required>
         </div>
       </div>
 
@@ -78,30 +78,29 @@
   </div>
 </div>
 
+<script src="js/api.js"></script>
 <script>
-const SESSION_KEY = 'bpkk_user_aktif';
 document.getElementById('toggle-password')?.addEventListener('click', function () {
   const input = document.getElementById('pass');
   input.type = input.type === 'password' ? 'text' : 'password';
 });
+
+// Jika sudah login sebagai pegawai, langsung ke halaman presensi.
+if (Api.token() && (Api.user() || {}).role === 'pegawai') location.replace('pegawai.html');
+
 document.getElementById('form-login').addEventListener('submit', async function (event) {
   event.preventDefault();
   const button = document.getElementById('btn-submit');
   const label = document.getElementById('btn-text');
-  const username = document.getElementById('user').value.trim().toLowerCase();
+  const username = document.getElementById('user').value.trim();
+  const password = document.getElementById('pass').value;
   button.disabled = true; label.textContent = 'Memproses...';
   try {
-    const response = await fetch('js/data/pegawai.json');
-    const pegawai = await response.json();
-    const dataPegawai = JSON.parse(localStorage.getItem('bpkk_pegawai_v2')) || [];
-    const selected = pegawai.find(p => p.id.toLowerCase() === username || p.nama.toLowerCase() === username);
-    if (!selected) {
-      alert('Akun demo tidak ditemukan. Gunakan ID PPNPN001–PPNPN030 atau nama pegawai pada data dummy.');
-      return;
-    }
-    localStorage.setItem(SESSION_KEY, selected.id);
+    const data = await Api.post('/api/auth/login', { username, password });
+    if (data.user.role !== 'pegawai') throw new Error('Akun admin silakan masuk lewat halaman Login Admin.');
+    Api.simpanSesi(data.token, data.user);
     location.href = 'pegawai.html';
-  } catch (error) { alert('Data pegawai gagal dimuat. Jalankan proyek melalui Live Server.'); }
+  } catch (error) { alert(error.message); }
   finally { button.disabled = false; label.textContent = 'Masuk ke presensi'; }
 });
 </script>

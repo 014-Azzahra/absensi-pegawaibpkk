@@ -289,25 +289,29 @@
     <main class="app-main" id="app-main"></main>
 </div>
 
+<script src="js/api.js"></script>
 <script>
 /* ============================================================
    1. DATA & STATE
    ============================================================ */
-const DATA_PEGAWAI = [{ id: 'PPNPN001', nama: 'Andi Pratama', jabatan: 'Staff Administrasi', nip: '19900101 202001 1 001' }];
-const STORAGE_KEY = 'bpkk_absensi_v2';
-const BATAS_TERLAMBAT = '08:30';
-const KANTOR = { lat: -3.971464128431429, lon: 122.51444925176875 };
+// Data pegawai & absensi kini berasal dari backend (REST API), bukan localStorage.
+let KONFIG = { kantor: { lat: -3.971464128431429, lon: 122.51444925176875 }, radiusMeter: 500, jamMasuk: '08:00', jamPulang: '16:00' }; // diganti dari GET /api/konfigurasi
 
-let pegawaiAktif = DATA_PEGAWAI[0];
+let pegawaiAktif = null;      // diisi dari GET /api/profil
+let absenHariIni = null;     // diisi dari GET /api/absensi/hari-ini
 let posisiTerakhir = null;
 let fotoMasuk = '', fotoPulang = '';
 let streamKamera = null, fotoSementara = { masuk: '', pulang: '' };
 
 const $ = (id) => document.getElementById(id);
-const getData = () => JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-const saveData = (data) => localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-const tglHariIni = () => new Date().toLocaleDateString('en-CA');
-const jamSekarang = () => new Date().toTimeString().slice(0, 5);
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const bulanIni = () => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}`; };
+
+async function muatHariIni() {
+    try { absenHariIni = (await Api.get('/api/absensi/hari-ini')).absensi; }
+    catch (e) { absenHariIni = null; }
+    return absenHariIni;
+}
 const formatTgl = (date = new Date()) => date.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
 function setPesan(id, pesan, tipe = 'error') {
@@ -324,9 +328,9 @@ const hitungJarak = (lat1, lon1, lat2, lon2) => {
 const ambilLokasi = () => new Promise((resolve, reject) => {
     if (!navigator.geolocation) return reject(new Error('Browser tidak mendukung GPS.'));
     navigator.geolocation.getCurrentPosition((pos) => {
-        const jarak = hitungJarak(pos.coords.latitude, pos.coords.longitude, KANTOR.lat, KANTOR.lon);
-        if (jarak > 500) return reject(new Error(`Di luar radius (${Math.round(jarak)}m).`));
-        resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude, jarak });
+        const jarak = hitungJarak(pos.coords.latitude, pos.coords.longitude, KONFIG.kantor.lat, KONFIG.kantor.lon);
+        if (jarak > KONFIG.radiusMeter) return reject(new Error(`Di luar radius (${Math.round(jarak)}m dari kantor; maks. ${KONFIG.radiusMeter}m).`));
+        resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude, jarak }); // server memvalidasi ulang radius
     }, () => reject(new Error('Akses GPS ditolak/gagal.')), { enableHighAccuracy: true });
 });
 
@@ -359,7 +363,7 @@ function renderBeranda() {
     return `
         <div class="welcome-header">
             <div>
-                <h2>Halo, ${pegawaiAktif.nama} 👋</h2>
+                <h2>Halo, ${esc(pegawaiAktif.nama)} 👋</h2>
                 <p>Semangat hari ini! Jangan lupa absen sesuai jadwal.</p>
             </div>
             <div class="time-box">
@@ -388,21 +392,21 @@ function renderBeranda() {
                         <div class="info-row-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
                         <div class="info-row-text">
                             <small>Nama Pegawai</small>
-                            <strong>${pegawaiAktif.nama}</strong>
+                            <strong>${esc(pegawaiAktif.nama)}</strong>
                         </div>
                     </div>
                     <div class="info-row">
                         <div class="info-row-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg></div>
                         <div class="info-row-text">
                             <small>Posisi / Jabatan</small>
-                            <strong>${pegawaiAktif.jabatan}</strong>
+                            <strong>${esc(pegawaiAktif.jabatan)}</strong>
                         </div>
                     </div>
                     <div class="info-row">
                         <div class="info-row-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
                         <div class="info-row-text">
                             <small>Jam Kerja Kantor</small>
-                            <strong>08:00 - 16:00</strong>
+                            <strong>${esc(KONFIG.jamMasuk)} - ${esc(KONFIG.jamPulang)}</strong>
                         </div>
                     </div>
                 </div>
@@ -458,30 +462,19 @@ function renderBeranda() {
     `;
 }
 
-function initBeranda() {
+async function initBeranda() {
     startJam();
-    
-    const now = new Date();
-    const prefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const dataBulanIni = getData().filter(d => d.pegawaiId === pegawaiAktif.id && d.tanggal.startsWith(prefix));
-    
-    const hadir = dataBulanIni.filter(d => d.status === 'hadir').length;
-    const telat = dataBulanIni.filter(d => d.statusWaktu === 'terlambat').length;
-    const izin = dataBulanIni.filter(d => ['izin', 'sakit', 'cuti'].includes(d.status)).length;
-    
-    let hariKerja = 0;
-    for (let d = 1; d <= now.getDate(); d++) {
-        const day = new Date(now.getFullYear(), now.getMonth(), d).getDay();
-        if (day !== 0 && day !== 6) hariKerja++;
-    }
-    const tanpa = Math.max(0, hariKerja - dataBulanIni.length);
-
-    $('dash-hadir').textContent = hadir;
-    $('dash-terlambat').textContent = telat;
-    $('dash-izin').textContent = izin;
-    $('dash-tanpa').textContent = tanpa;
-
-    const rec = getData().find(r => r.pegawaiId === pegawaiAktif.id && r.tanggal === tglHariIni());
+    let rec = null;
+    try {
+        const [rk, hari] = await Promise.all([Api.get(`/api/absensi/rekap?bulan=${bulanIni()}`), Api.get('/api/absensi/hari-ini')]);
+        if (!$('dash-hadir')) return;   // pengguna sudah pindah halaman
+        const r = rk.rekap;
+        $('dash-hadir').textContent = r.hadir;
+        $('dash-terlambat').textContent = r.terlambat;
+        $('dash-izin').textContent = r.izin + r.sakit + r.cuti;
+        $('dash-tanpa').textContent = r.tanpaKeterangan;
+        rec = hari.absensi; absenHariIni = rec;
+    } catch (e) { return; }
     const cardKiri = $('card-absen-kiri');
     const kontenAtas = $('konten-kiri-atas');
     const kontenBawah = $('konten-kiri-bawah');
@@ -510,7 +503,7 @@ function initBeranda() {
                 </div>
             `;
             kontenBawah.innerHTML = `
-                <a href="#absen" class="btn-hero-action btn-green" onclick="setTimeout(()=>document.getElementById('btn-tab-pulang').click(), 100)">
+                <a href="#absen" class="btn-hero-action btn-green" onclick="window.bukaTabPulang = true">
                     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                     Absen Pulang
                 </a>
@@ -537,7 +530,7 @@ function initBeranda() {
         cardKiri.className = 'hero-card-left bg-amber';
         kontenAtas.innerHTML = `
             <h3><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Absensi ${rec.status.toUpperCase()}</h3>
-            <p>Anda tercatat <strong>${rec.status}</strong> pada hari ini. Alasan: "${rec.alasan}"</p>
+            <p>Anda tercatat <strong>${rec.status}</strong> pada hari ini. Alasan: "${esc(rec.alasan)}"</p>
         `;
         kontenBawah.innerHTML = `
             <div class="btn-hero-action btn-disabled">
@@ -553,7 +546,7 @@ function initBeranda() {
 function renderAbsen() {
     return `
         <div class="header-card">
-            <div><h2>${pegawaiAktif.nama}</h2><p>${pegawaiAktif.jabatan}</p></div>
+            <div><h2>${esc(pegawaiAktif.nama)}</h2><p>${esc(pegawaiAktif.jabatan)}</p></div>
             <div class="datetime-box"><h3 id="jam">00:00:00</h3><span>${formatTgl()}</span></div>
         </div>
         <div class="location-banner" id="banner-lokasi">Memeriksa radius...</div>
@@ -604,6 +597,8 @@ function renderAbsen() {
                 <div class="form-group">
                     <label>Kegiatan hari ini</label>
                     <textarea class="form-control" id="kegiatan-pulang" placeholder="Tuliskan kegiatan..."></textarea>
+                    <button type="button" class="btn-ulangi" id="btn-simpan-kegiatan" style="margin-top:8px;">Simpan Kegiatan</button>
+                    <div id="pesan-kegiatan" class="notice"></div>
                 </div>
                 <div class="form-group">
                     <label>Foto Selfie Pulang</label>
@@ -637,7 +632,7 @@ function initAbsen() {
     ambilLokasi().then(lok => {
         posisiTerakhir = lok;
         $('banner-lokasi').className = 'location-banner';
-        $('banner-lokasi').innerHTML = `✅ Anda berada di dalam radius kantor (Maks. 500m).`;
+        $('banner-lokasi').innerHTML = `✅ Anda berada di dalam radius kantor (Maks. ${KONFIG.radiusMeter}m).`;
         cekTombol();
     }).catch(err => {
         $('banner-lokasi').className = 'location-banner error';
@@ -680,8 +675,18 @@ function initAbsen() {
 
     $('btn-absen-masuk').onclick = kirimMasuk;
     $('btn-absen-pulang').onclick = kirimPulang;
+    $('btn-simpan-kegiatan').onclick = simpanKegiatan;
 
     cekTombol();
+    muatHariIni().then(() => {
+        if (!$('kegiatan-pulang')) return;
+        if (absenHariIni && absenHariIni.kegiatan && !$('kegiatan-pulang').value) $('kegiatan-pulang').value = absenHariIni.kegiatan;
+        cekTombol();
+        if (window.bukaTabPulang) {      // datang dari tombol "Absen Pulang" di beranda
+            window.bukaTabPulang = false;
+            if (!$('btn-tab-pulang').disabled) $('btn-tab-pulang').click();
+        }
+    });
 }
 
 /* ============================================================
@@ -695,7 +700,7 @@ function renderRekap() {
         <div class="rekap-header">
             <div>
                 <h2>Rekapitulasi Absensi</h2>
-                <p>Ringkasan kehadiran Anda berdasarkan periode yang dipilih.</p>
+                <p><strong>${esc(pegawaiAktif.nama)}</strong> • ${esc(pegawaiAktif.jabatan)} — ringkasan kehadiran berdasarkan periode yang dipilih.</p>
             </div>
             
             <div class="filter-periode-wrapper">
@@ -798,65 +803,42 @@ function renderRekap() {
 
 function initRekap() {
     const input = $('filter-bulan');
-    const now = new Date();
-    input.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    
+    input.value = bulanIni();
     input.onchange = () => {
         const val = input.value;
-        if (val) {
-            const [year, month] = val.split('-');
-            const date = new Date(year, month - 1, 1);
-            $('periode-text').textContent = date.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
-        }
+        if (!val) return;
+        const [year, month] = val.split('-');
+        $('periode-text').textContent = new Date(year, month - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
         hitungRekap();
     };
-    
     hitungRekap();
 }
 
-function hitungRekap() {
+async function hitungRekap() {
     const val = $('filter-bulan').value; if (!val) return;
-    const data = getData().filter(d => d.pegawaiId === pegawaiAktif.id && d.tanggal.startsWith(val));
-    
-    const hadir = data.filter(d => d.status === 'hadir').length;
-    const telat = data.filter(d => d.statusWaktu === 'terlambat').length;
-    const izin = data.filter(d => d.status === 'izin').length;
-    const sakit = data.filter(d => d.status === 'sakit').length;
-    const cuti = data.filter(d => d.status === 'cuti').length;
-    
-    const [year, month] = val.split('-').map(Number);
-    const today = new Date();
-    const lastDay = new Date(year, month, 0).getDate();
-    const sampai = year === today.getFullYear() && month === today.getMonth() + 1 ? today.getDate() : (new Date(year, month - 1, 1) > today ? 0 : lastDay);
-    let hariKerja = 0;
-    for (let d = 1; d <= sampai; d++) {
-        const day = new Date(year, month - 1, d).getDay();
-        if (day !== 0 && day !== 6) hariKerja++;
-    }
+    let hasil;
+    try { hasil = await Api.get(`/api/absensi/rekap?bulan=${encodeURIComponent(val)}`); }
+    catch (e) { $('tabel-rekap').innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 30px; color: var(--red);">${esc(e.message)}</td></tr>`; return; }
+    if (!$('tabel-rekap') || $('filter-bulan').value !== val) return;   // halaman/bulan sudah berubah
 
-    const tanpa = Math.max(0, hariKerja - data.length);
-    
-    $('rekap-hadir').textContent = hadir;
-    $('rekap-terlambat').textContent = telat;
-    $('rekap-absen').textContent = izin + sakit + cuti + tanpa;
-    $('rekap-izin').textContent = izin;
-    $('rekap-sakit').textContent = sakit;
-    $('rekap-cuti').textContent = cuti;
-    $('rekap-tanpa').textContent = tanpa;
-    $('rekap-harikerja').textContent = hariKerja;
+    const r = hasil.rekap;
+    $('rekap-hadir').textContent = r.hadir;
+    $('rekap-terlambat').textContent = r.terlambat;
+    $('rekap-absen').textContent = r.izin + r.sakit + r.cuti + r.tanpaKeterangan;
+    $('rekap-izin').textContent = r.izin;
+    $('rekap-sakit').textContent = r.sakit;
+    $('rekap-cuti').textContent = r.cuti;
+    $('rekap-tanpa').textContent = r.tanpaKeterangan;
+    $('rekap-harikerja').textContent = hasil.hariKerja;
 
-    const rows = data.sort((a,b) => b.tanggal.localeCompare(a.tanggal)).map(d => `
+    const warna = { hadir: 'green', izin: 'amber', sakit: 'purple', cuti: 'blue' };
+    const rows = hasil.riwayat.map(d => `
         <tr>
-            <td style="font-weight: 600;">${new Date(d.tanggal).toLocaleDateString('id-ID', {day:'2-digit',month:'long',year:'numeric'})}</td>
-            <td>
-                ${d.status === 'hadir' ? '<span style="color:var(--green);font-weight:600;">Hadir</span>' : 
-                  d.status === 'izin' ? '<span style="color:var(--amber);font-weight:600;">Izin</span>' : 
-                  d.status === 'sakit' ? '<span style="color:var(--purple);font-weight:600;">Sakit</span>' : 
-                  d.status === 'cuti' ? '<span style="color:var(--blue);font-weight:600;">Cuti</span>' : d.status}
-            </td>
+            <td style="font-weight: 600;">${new Date(d.tanggal + 'T00:00:00').toLocaleDateString('id-ID', {day:'2-digit',month:'long',year:'numeric'})}</td>
+            <td><span style="color:var(--${warna[d.status] || 'ink'});font-weight:600;">${esc(d.status.charAt(0).toUpperCase() + d.status.slice(1))}</span></td>
             <td>${d.jamMasuk || '-'}</td>
             <td>${d.jamPulang || '-'}</td>
-            <td>${d.statusWaktu === 'terlambat' ? '<span class="badge-telat">Terlambat</span>' : (d.alasan || d.kegiatan || '-')}</td>
+            <td>${d.statusWaktu === 'terlambat' ? '<span class="badge-telat">Terlambat</span> ' : ''}${esc(d.alasan || d.kegiatan || (d.statusWaktu === 'terlambat' ? '' : '-'))}</td>
         </tr>
     `).join('');
     $('tabel-rekap').innerHTML = rows || '<tr><td colspan="5" style="text-align:center; padding: 30px; color: var(--muted);">Belum ada data absensi pada periode ini.</td></tr>';
@@ -931,54 +913,94 @@ function cekTombol() {
     if (isHadir) $('btn-absen-masuk').disabled = !fotoMasuk || !posisiTerakhir;
     else $('btn-absen-masuk').disabled = false;
 
-    const rec = getData().find(r => r.pegawaiId === pegawaiAktif.id && r.tanggal === tglHariIni());
-    const bolehPulang = rec && rec.status === 'hadir' && !rec.jamPulang;
+    const rec = absenHariIni;
+    if (rec) { $('btn-absen-masuk').disabled = true; $('btn-absen-masuk').textContent = 'Sudah Absen Hari Ini'; }
+    const bolehPulang = !!rec && rec.status === 'hadir' && !rec.jamPulang;
     $('btn-tab-pulang').disabled = !bolehPulang;
-    $('btn-absen-pulang').disabled = !bolehPulang || $('kegiatan-pulang').value.trim().length < 5 || !fotoPulang;
+    $('btn-simpan-kegiatan').disabled = !bolehPulang;
+    $('btn-absen-pulang').disabled = !bolehPulang || $('kegiatan-pulang').value.trim().length < 5 || !fotoPulang || !posisiTerakhir;
 }
 
-function kirimMasuk() {
+async function buatFormAbsen(foto) {
+    const form = new FormData();
+    form.append('lat', posisiTerakhir.lat);
+    form.append('lon', posisiTerakhir.lon);
+    if (foto) form.append('foto', await Api.dataUrlKeBlob(foto), 'selfie.jpg');
+    return form;
+}
+
+async function kirimMasuk() {
     const status = $('status-kehadiran').value;
-    const data = getData();
-    if (data.some(r => r.pegawaiId === pegawaiAktif.id && r.tanggal === tglHariIni())) return setPesan('pesan-masuk', 'Anda sudah absen hari ini.', 'error');
-
-    let rec = { id: Date.now(), pegawaiId: pegawaiAktif.id, nama: pegawaiAktif.nama, tanggal: tglHariIni(), status: status, 
-        jamMasuk: status === 'hadir' ? jamSekarang() : null, statusWaktu: status === 'hadir' && jamSekarang() > BATAS_TERLAMBAT ? 'terlambat' : 'hadir',
-        fotoMasuk: status === 'hadir' ? fotoMasuk : null, alasan: status !== 'hadir' ? $('alasan-izin').value : '' };
-
-    if (status !== 'hadir' && !rec.alasan) return setPesan('pesan-masuk', 'Alasan wajib diisi.', 'error');
-
-    data.push(rec); saveData(data);
-    setPesan('pesan-masuk', 'Berhasil disimpan!', 'success');
-    setTimeout(() => { location.hash = '#beranda'; }, 1500);
+    const tombol = $('btn-absen-masuk');
+    try {
+        tombol.disabled = true;
+        let form = new FormData();
+        if (status === 'hadir') {
+            if (!posisiTerakhir) throw new Error('Lokasi belum valid.');
+            if (!fotoMasuk) throw new Error('Foto selfie wajib dilampirkan.');
+            form = await buatFormAbsen(fotoMasuk);
+        } else {
+            const alasan = $('alasan-izin').value.trim();
+            if (!alasan) throw new Error('Alasan wajib diisi.');
+            form.append('alasan', alasan);
+        }
+        form.append('status', status);
+        const hasil = await Api.kirimForm('/api/absensi/masuk', form);
+        absenHariIni = hasil.absensi;
+        setPesan('pesan-masuk', hasil.pesan, 'success');
+        setTimeout(() => { location.hash = '#beranda'; }, 1500);
+    } catch (e) {
+        setPesan('pesan-masuk', e.message, 'error');
+        tombol.disabled = false;
+    }
 }
 
-function kirimPulang() {
-    const data = getData();
-    const rec = data.find(r => r.pegawaiId === pegawaiAktif.id && r.tanggal === tglHariIni());
-    rec.jamPulang = jamSekarang(); rec.fotoPulang = fotoPulang; rec.kegiatan = $('kegiatan-pulang').value;
-    saveData(data);
-    setPesan('pesan-pulang', 'Berhasil disimpan!', 'success');
-    setTimeout(() => { location.hash = '#beranda'; }, 1500);
+async function simpanKegiatan() {
+    try {
+        const kegiatan = $('kegiatan-pulang').value.trim();
+        const hasil = await Api.put('/api/absensi/kegiatan', { kegiatan });
+        if (absenHariIni) absenHariIni.kegiatan = hasil.kegiatan;
+        setPesan('pesan-kegiatan', hasil.pesan, 'success');
+        cekTombol();
+    } catch (e) { setPesan('pesan-kegiatan', e.message, 'error'); }
+}
+
+async function kirimPulang() {
+    const tombol = $('btn-absen-pulang');
+    try {
+        tombol.disabled = true;
+        if (!posisiTerakhir) throw new Error('Lokasi belum valid.');
+        if (!fotoPulang) throw new Error('Foto selfie wajib dilampirkan.');
+        // 1) simpan kegiatan harian  2) kirim absen pulang (server mewajibkan kegiatan sudah tersimpan)
+        await Api.put('/api/absensi/kegiatan', { kegiatan: $('kegiatan-pulang').value.trim() });
+        const hasil = await Api.kirimForm('/api/absensi/pulang', await buatFormAbsen(fotoPulang));
+        absenHariIni = hasil.absensi;
+        setPesan('pesan-pulang', hasil.pesan, 'success');
+        setTimeout(() => { location.hash = '#beranda'; }, 1500);
+    } catch (e) {
+        setPesan('pesan-pulang', e.message, 'error');
+        tombol.disabled = false;
+    }
 }
 
 /* ============================================================
    7. MULAI APLIKASI
    ============================================================ */
-document.addEventListener('DOMContentLoaded', () => {
-    $('btn-keluar').onclick = () => { 
-        stopKamera(); 
-        localStorage.removeItem('bpkk_user_aktif'); // Hapus sesi
-        window.location.href = 'index.html'; // Arahkan ke halaman login (sesuaikan nama filenya jika beda)
-    };
-    
+document.addEventListener('DOMContentLoaded', async () => {
+    if (!Api.wajibPeran('pegawai')) return;           // belum login -> ke halaman login
+    $('btn-keluar').onclick = () => { stopKamera(); Api.keluar('pegawai'); };
+
+    try { KONFIG = await Api.get('/api/konfigurasi').catch(() => KONFIG); pegawaiAktif = await Api.get('/api/profil'); }
+    catch (e) { $('app-main').innerHTML = `<div class="card" style="color:#b91c1c;background:#fef2f2;border-color:#fecaca;">${esc(e.message)}</div>`; return; }
+
     window.addEventListener('hashchange', () => {
         const page = location.hash.replace('#', '') || 'beranda';
         if (PAGES[page]) navigate(page);
     });
-    
-    if (!location.hash) location.hash = '#beranda';
-    else navigate(location.hash.replace('#', ''));
+
+    const awal = location.hash.replace('#', '');
+    if (!PAGES[awal]) location.hash = '#beranda';
+    else navigate(awal);
 });
 </script>
 </body>

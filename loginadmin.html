@@ -66,19 +66,25 @@
         </div>
     </div>
 
+    <script src="js/api.js"></script>
     <script>
-        document.getElementById('form-login-admin').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const user = document.getElementById('user').value.trim();
-            const pass = document.getElementById('pass').value;
+        if (Api.token() && (Api.user() || {}).role === 'admin') location.replace('admin.html');
 
-            // LOGIN SEMENTARA (Username: admin, Password: admin123)
-            if (user === 'admin' && pass === 'admin123') {
-                localStorage.setItem('bpkk_admin_aktif', 'true');
+        document.getElementById('form-login-admin').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const tombol = this.querySelector('button[type=submit]');
+            tombol.disabled = true;
+            try {
+                const data = await Api.post('/api/auth/login', {
+                    username: document.getElementById('user').value.trim(),
+                    password: document.getElementById('pass').value
+                });
+                if (data.user.role !== 'admin') throw new Error('Akun ini bukan admin.');
+                Api.simpanSesi(data.token, data.user);
                 window.location.href = 'admin.html';
-            } else {
-                alert('Username atau Password Admin salah!');
-            }
+            } catch (err) {
+                alert(err.message);
+            } finally { tombol.disabled = false; }
         });
     </script>
 </body>
