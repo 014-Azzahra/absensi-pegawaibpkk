@@ -158,7 +158,7 @@
             <span>BPKK Kendari - Sistem Presensi PPNPN</span>
         </div>
     </div>
-    <a href="index.html" class="btn-logout">Keluar</a>
+    <button type="button" class="btn-logout" onclick="Api.keluar('admin')">Keluar</button>
 </header>
 
 <div class="app-shell">
@@ -174,6 +174,9 @@
             </a>
             <a class="menu-item" onclick="switchPage('akun', this)" id="nav-akun">
                 <span class="menu-icon">👥</span> <span class="menu-label">Kelola Akun</span>
+            </a>
+            <a class="menu-item" onclick="switchPage('pengaturan', this)" id="nav-pengaturan">
+                <span class="menu-icon">⚙️</span> <span class="menu-label">Pengaturan</span>
             </a>
         </nav>
     </aside>
@@ -238,10 +241,16 @@
                     <h1>Rekap Kehadiran Pegawai</h1>
                     <p>Pilih tanggal pada kalender untuk melihat daftar kehadiran.</p>
                 </div>
-                <button class="btn-success" onclick="unduhExcel()">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                    Unduh Excel (1 Bulan)
-                </button>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button class="btn-primary" onclick="unduhRekap('csv')">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Unduh CSV
+                    </button>
+                    <button class="btn-success" onclick="unduhRekap('xlsx')">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Unduh Excel
+                    </button>
+                </div>
             </div>
 
             <div class="card">
@@ -257,6 +266,22 @@
                         <div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div><div>Min</div>
                     </div>
                     <div class="kalender-grid" id="kalender-grid"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 style="font-size: 16px; margin: 0 0 4px 0;">Rekap Bulanan Seluruh Pegawai</h2>
+                <p id="info-rekap-bulan" style="margin: 0 0 16px 0; font-size: 13px; color: var(--muted);"></p>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th><th>Nama</th><th>Jabatan</th><th>Hadir</th><th>Terlambat</th>
+                                <th>Izin</th><th>Sakit</th><th>Cuti</th><th>Tanpa Ket.</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabel-rekap-bulanan"></tbody>
+                    </table>
                 </div>
             </div>
         </section>
@@ -342,7 +367,7 @@
                         </div>
                         <div class="form-group">
                             <label>Password</label>
-                            <input type="text" id="new-password" placeholder="Masukkan password" required>
+                            <input type="text" id="new-password" placeholder="Minimal 6 karakter" minlength="6" required>
                         </div>
                         <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">Simpan Akun</button>
                     </form>
@@ -367,6 +392,59 @@
             </div>
         </section>
 
+        <!-- HALAMAN 4: PENGATURAN PRESENSI -->
+        <section id="page-pengaturan" class="page-section">
+            <div class="page-title-area">
+                <div>
+                    <h1>Pengaturan Presensi</h1>
+                    <p>Lokasi kantor, radius, dan jam kerja. Perubahan langsung berlaku tanpa restart server.</p>
+                </div>
+            </div>
+
+            <form id="form-pengaturan" onsubmit="simpanPengaturan(event)">
+                <div class="form-grid">
+                    <div class="card">
+                        <h2 style="font-size: 16px; margin: 0 0 6px 0;">Lokasi Kantor</h2>
+                        <p style="margin: 0 0 18px 0; font-size: 13px; color: var(--muted);">
+                            Di Google Maps, klik kanan pada lokasi kantor lalu klik angka koordinat untuk menyalin (contoh: <em>-3.9714, 122.5144</em>), kemudian tempel di kolom Latitude.
+                        </p>
+                        <div class="form-group">
+                            <label for="set-lat">Latitude</label>
+                            <input type="text" id="set-lat" inputmode="decimal" placeholder="-3.971464" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="set-lon">Longitude</label>
+                            <input type="text" id="set-lon" inputmode="decimal" placeholder="122.514449" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="set-radius">Radius maksimum absen (meter)</label>
+                            <input type="number" id="set-radius" min="10" max="5000" step="1" required>
+                        </div>
+                        <button type="button" class="btn-aksi" style="padding: 9px 14px;" onclick="pakaiLokasiSaya()">📍 Pakai lokasi saya saat ini</button>
+                        <a id="link-maps" class="btn-aksi" style="padding: 9px 14px; margin-left: 6px; text-decoration: none; display: inline-block;" target="_blank" rel="noopener">Lihat di Google Maps</a>
+                    </div>
+
+                    <div class="card">
+                        <h2 style="font-size: 16px; margin: 0 0 18px 0;">Jam Kerja</h2>
+                        <div class="form-group">
+                            <label for="set-masuk">Jam masuk</label>
+                            <input type="time" id="set-masuk" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="set-terlambat">Batas terlambat (masuk setelah jam ini = terlambat)</label>
+                            <input type="time" id="set-terlambat" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="set-pulang">Jam pulang</label>
+                            <input type="time" id="set-pulang" required>
+                        </div>
+                        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 8px;">Simpan Pengaturan</button>
+                        <p id="pesan-pengaturan" style="margin: 12px 0 0 0; font-size: 13px;"></p>
+                    </div>
+                </div>
+            </form>
+        </section>
+
     </main>
 </div>
 
@@ -379,6 +457,7 @@
 </div>
 
 <!-- Panggil JS di luar body utama -->
+<script src="js/api.js"></script>
 <script src="js/admin.js"></script>
 </body>
 </html>

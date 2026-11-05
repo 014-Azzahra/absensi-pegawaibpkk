@@ -1,382 +1,281 @@
-const STORAGE_ABSEN = 'bpkk_absensi_v2';
-const STORAGE_PEGAWAI = 'bpkk_pegawai_v2';
-const STORAGE_VERSI = 'bpkk_versi_data'; // Kunci untuk cek versi
-
-// 30 Data Dummy Pegawai (Sesuai Bidang)
-const dummyPegawai = [
-    { id: 'PPNPN001', nama: 'Andi Pratama', jabatan: 'Kepegawaian', username: 'andi', password: '123' },
-    { id: 'PPNPN002', nama: 'Sari Wulandari', jabatan: 'Kepegawaian', username: 'sari', password: '123' },
-    { id: 'PPNPN003', nama: 'La Ode Rahman', jabatan: 'Kepegawaian', username: 'laode', password: '123' },
-    { id: 'PPNPN004', nama: 'Budi Santoso', jabatan: 'Kepegawaian', username: 'budi', password: '123' },
-    { id: 'PPNPN005', nama: 'Wa Ode Intan', jabatan: 'Keuangan', username: 'intan', password: '123' },
-    { id: 'PPNPN006', nama: 'Rina Marlina', jabatan: 'Keuangan', username: 'rina', password: '123' },
-    { id: 'PPNPN007', nama: 'Ahmad Fauzi', jabatan: 'Keuangan', username: 'fauzi', password: '123' },
-    { id: 'PPNPN008', nama: 'Nur Aisyah', jabatan: 'Badan Milik Negara', username: 'aisyah', password: '123' },
-    { id: 'PPNPN009', nama: 'Hasanuddin', jabatan: 'Badan Milik Negara', username: 'hasan', password: '123' },
-    { id: 'PPNPN010', nama: 'Muh. Ilham', jabatan: 'Badan Milik Negara', username: 'ilham', password: '123' },
-    { id: 'PPNPN011', nama: 'Fitriani', jabatan: 'IT/Medsos', username: 'fitri', password: '123' },
-    { id: 'PPNPN012', nama: 'Reza Pahlevi', jabatan: 'IT/Medsos', username: 'reza', password: '123' },
-    { id: 'PPNPN013', nama: 'Siti Rahma', jabatan: 'IT/Medsos', username: 'siti', password: '123' },
-    { id: 'PPNPN014', nama: 'Joko Susilo', jabatan: 'Tenaga Kerja Mandiri', username: 'joko', password: '123' },
-    { id: 'PPNPN015', nama: 'Dewi Lestari', jabatan: 'Tenaga Kerja Mandiri', username: 'dewi', password: '123' },
-    { id: 'PPNPN016', nama: 'Agus Salim', jabatan: 'Tenaga Kerja Mandiri', username: 'agus', password: '123' },
-    { id: 'PPNPN017', nama: 'Hj. Maryam', jabatan: 'Jejaring', username: 'maryam', password: '123' },
-    { id: 'PPNPN018', nama: 'Yusuf Kalla', jabatan: 'Jejaring', username: 'yusuf', password: '123' },
-    { id: 'PPNPN019', nama: 'Ani Yudhoyono', jabatan: 'Jejaring', username: 'ani', password: '123' },
-    { id: 'PPNPN020', nama: 'Prabowo Subianto', jabatan: 'Perencanaan Program', username: 'prabowo', password: '123' },
-    { id: 'PPNPN021', nama: 'Gibran Rakabuming', jabatan: 'Perencanaan Program', username: 'gibran', password: '123' },
-    { id: 'PPNPN022', nama: 'Megawati', jabatan: 'Perencanaan Program', username: 'mega', password: '123' },
-    { id: 'PPNPN023', nama: 'Ridwan Kamil', jabatan: 'Kepegawaian', username: 'ridwan', password: '123' },
-    { id: 'PPNPN024', nama: 'Najwa Shihab', jabatan: 'IT/Medsos', username: 'najwa', password: '123' },
-    { id: 'PPNPN025', nama: 'Raffi Ahmad', jabatan: 'Jejaring', username: 'raffi', password: '123' },
-    { id: 'PPNPN026', nama: 'Baim Wong', jabatan: 'Keuangan', username: 'baim', password: '123' },
-    { id: 'PPNPN027', nama: 'Rachel Vennya', jabatan: 'Badan Milik Negara', username: 'rachel', password: '123' },
-    { id: 'PPNPN028', nama: 'Tretan Muslim', jabatan: 'Tenaga Kerja Mandiri', username: 'tretan', password: '123' },
-    { id: 'PPNPN029', nama: 'Coki Pardede', jabatan: 'Perencanaan Program', username: 'coki', password: '123' },
-    { id: 'PPNPN030', nama: 'Andre Taulany', jabatan: 'Kepegawaian', username: 'andre', password: '123' }
-];
+/* Panel Admin - semua data diambil dari backend lewat REST API (fetch). */
+if (!Api.wajibPeran('admin')) throw new Error('Belum login sebagai admin.');
 
 const $ = (id) => document.getElementById(id);
-const getPegawai = () => JSON.parse(localStorage.getItem(STORAGE_PEGAWAI)) || dummyPegawai;
-const savePegawai = (data) => localStorage.setItem(STORAGE_PEGAWAI, JSON.stringify(data));
-const getAbsen = () => JSON.parse(localStorage.getItem(STORAGE_ABSEN)) || [];
-const saveAbsen = (data) => localStorage.setItem(STORAGE_ABSEN, JSON.stringify(data));
-
-// ==========================================
-// TRIK MEMAKSA DATA BARU MUNCUL
-// ==========================================
-const versiSekarang = 'v2'; // Ubah string ini jika ingin me-reset data lagi nanti
-if (localStorage.getItem(STORAGE_VERSI) !== versiSekarang) {
-    savePegawai(dummyPegawai); // Timpa data lama dengan 30 data baru
-    localStorage.setItem(STORAGE_VERSI, versiSekarang);
-}
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const bulanIni = () => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}`; };
+const pesanError = (e) => { if (e && e.message !== 'Sesi berakhir.') alert(e.message || 'Terjadi kesalahan.'); };
+const barisKosong = (kolom, teks, warna = 'var(--muted)') => `<tr><td colspan="${kolom}" style="text-align:center; color:${warna}; padding:30px;">${esc(teks)}</td></tr>`;
 
 // Navigasi Halaman
 function switchPage(page, el) {
     document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-    
-    document.getElementById(`page-${page}`).classList.add('active');
-    
-    if (page !== 'detail-harian') {
-        el.classList.add('active');
-    }
+    $(`page-${page}`).classList.add('active');
+    if (page !== 'detail-harian' && el) el.classList.add('active');
 
     if (page === 'beranda') loadBeranda();
     if (page === 'rekap') renderKalender();
     if (page === 'akun') renderDaftarAkun();
-    
+    if (page === 'pengaturan') muatPengaturan();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ==========================================
-// LOGIKA BERANDA
+// BERANDA (GET /api/admin/dashboard)
 // ==========================================
-function loadBeranda() {
-    const pegawai = getPegawai();
-    const absen = getAbsen();
-    
-    const now = new Date();
-    const bulanIni = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const absenBulanIni = absen.filter(a => a.tanggal.startsWith(bulanIni));
-    
-    const hadir = absenBulanIni.filter(a => a.status === 'hadir').length;
-    const terlambat = absenBulanIni.filter(a => a.statusWaktu === 'terlambat').length;
-    const izin = absenBulanIni.filter(a => ['izin', 'sakit', 'cuti'].includes(a.status)).length;
-    
-    let hariKerja = 0;
-    for (let d = 1; d <= now.getDate(); d++) {
-        const day = new Date(now.getFullYear(), now.getMonth(), d).getDay();
-        if (day !== 0 && day !== 6) hariKerja++;
-    }
-    const totalHarusHadir = hariKerja * pegawai.length;
-    const tanpaKet = Math.max(0, totalHarusHadir - absenBulanIni.length);
+async function loadBeranda() {
+    try {
+        const d = await Api.get(`/api/admin/dashboard?bulan=${bulanIni()}`);
+        $('dash-hadir').textContent = d.total.hadir;
+        $('dash-terlambat').textContent = d.total.terlambat;
+        $('dash-izin').textContent = d.total.izin + d.total.sakit + d.total.cuti;
+        $('dash-absen').textContent = d.total.tanpaKeterangan;
 
-    $('dash-hadir').textContent = hadir;
-    $('dash-terlambat').textContent = terlambat;
-    $('dash-izin').textContent = izin;
-    $('dash-absen').textContent = tanpaKet;
-
-    const aktivitas = [...absen].sort((a, b) => b.id - a.id).slice(0, 5);
-    
-    if (aktivitas.length === 0) {
-        $('tabel-aktivitas').innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--muted); padding: 30px;">Belum ada aktivitas absensi.</td></tr>';
-    } else {
-        $('tabel-aktivitas').innerHTML = aktivitas.map(a => `
-            <tr>
-                <td>${new Date(a.tanggal).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'})}</td>
-                <td>${a.jamMasuk || a.jamPulang || '-'}</td>
-                <td style="font-weight:600;">${a.nama}</td>
-                <td>${a.jamPulang ? 'Absen Pulang' : (a.jamMasuk ? 'Absen Masuk' : a.status.toUpperCase())}</td>
-            </tr>
-        `).join('');
-    }
+        $('tabel-aktivitas').innerHTML = d.terbaru.length === 0
+            ? barisKosong(4, 'Belum ada aktivitas absensi.')
+            : d.terbaru.map(a => `
+                <tr>
+                    <td>${new Date(a.tanggal + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                    <td>${a.jamPulang || a.jamMasuk || '-'}</td>
+                    <td style="font-weight:600;">${esc(a.nama)}</td>
+                    <td>${a.jamPulang ? 'Absen Pulang' : (a.jamMasuk ? 'Absen Masuk' : esc(a.status.toUpperCase()))}</td>
+                </tr>`).join('');
+    } catch (e) { pesanError(e); }
 }
 
 // ==========================================
-// LOGIKA KALENDER REKAP
+// KALENDER + REKAP BULANAN (GET /api/admin/absensi?bulan, /api/admin/rekap?bulan)
 // ==========================================
-function renderKalender() {
-    const filter = $('filter-bulan-admin').value;
-    if (!filter) {
-        const now = new Date();
-        $('filter-bulan-admin').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-        return renderKalender();
-    }
-
+async function renderKalender() {
+    if (!$('filter-bulan-admin').value) $('filter-bulan-admin').value = bulanIni();
     const val = $('filter-bulan-admin').value;
     const [year, month] = val.split('-').map(Number);
-    
-    const firstDay = new Date(year, month - 1, 1).getDay(); 
+
+    let absen = [], rekap;
+    try {
+        [absen, rekap] = await Promise.all([
+            Api.get(`/api/admin/absensi?bulan=${val}`).then(r => r.data),
+            Api.get(`/api/admin/rekap?bulan=${val}`),
+        ]);
+    } catch (e) { return pesanError(e); }
+    if ($('filter-bulan-admin').value !== val) return;     // bulan diganti saat menunggu
+
+    // --- kalender
+    const perTanggal = {};
+    absen.forEach(a => (perTanggal[a.tanggal] = perTanggal[a.tanggal] || []).push(a));
+    const firstDay = new Date(year, month - 1, 1).getDay();
     const totalDays = new Date(year, month, 0).getDate();
-    let startOffset = firstDay === 0 ? 6 : firstDay - 1; 
-
-    let html = '';
-
-    for (let i = 0; i < startOffset; i++) {
-        html += `<div class="kalender-cell empty"></div>`;
-    }
+    let html = '<div class="kalender-cell empty"></div>'.repeat(firstDay === 0 ? 6 : firstDay - 1);
 
     for (let d = 1; d <= totalDays; d++) {
-        const dateObj = new Date(year, month - 1, d);
-        const dayOfWeek = dateObj.getDay();
-        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+        const dow = new Date(year, month - 1, d).getDay();
         const tglStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-
-        const absenHariIni = getAbsen().filter(a => a.tanggal === tglStr);
-        const adaHadir = absenHariIni.some(a => a.status === 'hadir');
-        const adaIzin = absenHariIni.some(a => a.status !== 'hadir');
-
-        let dotHtml = '';
-        if (adaHadir) dotHtml += '<div class="dot dot-hadir"></div>';
-        if (adaIzin) dotHtml += '<div class="dot dot-izin"></div>';
-
-        if (isWeekend) {
-            html += `
-                <div class="kalender-cell libur" title="Hari Libur">
-                    <div class="tgl-num">${d}</div>
-                </div>
-            `;
-        } else {
-            html += `
-                <div class="kalender-cell kerja" onclick="bukaDetailHarian('${tglStr}')">
-                    <div class="tgl-num">${d}</div>
-                    <div class="indikator">${dotHtml}</div>
-                </div>
-            `;
+        if (dow === 0 || dow === 6) {
+            html += `<div class="kalender-cell libur" title="Hari Libur"><div class="tgl-num">${d}</div></div>`;
+            continue;
         }
+        const hari = perTanggal[tglStr] || [];
+        let dot = '';
+        if (hari.some(a => a.status === 'hadir')) dot += '<div class="dot dot-hadir"></div>';
+        if (hari.some(a => a.status !== 'hadir')) dot += '<div class="dot dot-izin"></div>';
+        html += `<div class="kalender-cell kerja" onclick="bukaDetailHarian('${tglStr}')"><div class="tgl-num">${d}</div><div class="indikator">${dot}</div></div>`;
     }
+    $('kalender-grid').innerHTML = html;
 
-    document.getElementById('kalender-grid').innerHTML = html;
-}
-
-// ==========================================
-// LOGIKA DETAIL HARIAN
-// ==========================================
-function bukaDetailHarian(tglStr) {
-    switchPage('detail-harian', null);
-    
-    const dateObj = new Date(tglStr);
-    const dateFormat = dateObj.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    $('judul-harian').textContent = `Kehadiran: ${dateFormat}`;
-
-    const absen = getAbsen().filter(a => a.tanggal === tglStr);
-
-    const hadir = absen.filter(a => a.status === 'hadir').length;
-    const terlambat = absen.filter(a => a.statusWaktu === 'terlambat').length;
-    const izin = absen.filter(a => ['izin', 'sakit', 'cuti'].includes(a.status)).length;
-
-    $('harian-hadir').textContent = hadir;
-    $('harian-terlambat').textContent = terlambat;
-    $('harian-izin').textContent = izin;
-
-    if (absen.length === 0) {
-        $('tabel-harian-admin').innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">Belum ada pegawai yang absen pada tanggal ini.</td></tr>';
-    } else {
-        $('tabel-harian-admin').innerHTML = absen.map(a => {
-            let badgeClass = 'badge-hadir';
-            if (a.status === 'izin' || a.status === 'cuti') badgeClass = 'badge-izin';
-            if (a.status === 'sakit') badgeClass = 'badge-absen';
-            if (a.statusWaktu === 'terlambat') badgeClass = 'badge-terlambat';
-
-            let ket = '-';
-            if (a.status === 'hadir') ket = a.kegiatan ? `<strong>Kegiatan:</strong> ${a.kegiatan}` : '<em>Tidak ada kegiatan</em>';
-            else ket = `<strong>Alasan:</strong> ${a.alasan || '-'}`;
-
-            let btnAksi = '';
-            if (a.fotoMasuk && a.fotoPulang) {
-                btnAksi += `
-                    <button class="btn-aksi" onclick="showFoto('${a.fotoMasuk}')">Foto Masuk</button>
-                    <button class="btn-aksi" style="margin-top:4px;" onclick="showFoto('${a.fotoPulang}')">Foto Pulang</button>
-                `;
-            } else if (a.fotoMasuk) {
-                btnAksi += `<button class="btn-aksi" onclick="showFoto('${a.fotoMasuk}')">Foto Masuk</button>`;
-            } else if (a.fotoPulang) {
-                btnAksi += `<button class="btn-aksi" onclick="showFoto('${a.fotoPulang}')">Foto Pulang</button>`;
-            }
-            
-            btnAksi += `
-                <button class="btn-aksi btn-danger" style="margin-top:4px;" onclick="hapusAbsen('${a.id}', '${tglStr}')">Hapus</button>
-            `;
-
-            return `
-                <tr>
-                    <td style="font-weight:600;">${a.nama}</td>
-                    <td>${a.jabatan}</td>
-                    <td>${a.jamMasuk || '-'}</td>
-                    <td>${a.jamPulang || '-'}</td>
-                    <td><span class="badge ${badgeClass}">${a.statusWaktu === 'terlambat' ? 'TERLAMBAT' : a.status.toUpperCase()}</span></td>
-                    <td style="max-width:250px; font-size:13px;">${ket}</td>
-                    <td>${btnAksi}</td>
-                </tr>
-            `;
-        }).join('');
-    }
-}
-
-// ==========================================
-// LOGIKA HAPUS ABSEN
-// ==========================================
-function hapusAbsen(id, tglStr) {
-    if (!confirm('Apakah Anda yakin ingin menghapus data absensi pegawai ini?')) return;
-    
-    let absen = getAbsen();
-    absen = absen.filter(a => a.id !== id);
-    saveAbsen(absen);
-    
-    alert('Data absensi berhasil dihapus.');
-    bukaDetailHarian(tglStr);
-}
-
-// ==========================================
-// UNDUH EXCEL
-// ==========================================
-function unduhExcel() {
-    const val = $('filter-bulan-admin').value;
-    if (!val) return alert('Pilih bulan terlebih dahulu!');
-
-    const absen = getAbsen().filter(a => a.tanggal.startsWith(val));
-    
-    if (absen.length === 0) {
-        return alert('Tidak ada data absensi untuk bulan ini.');
-    }
-
-    absen.sort((a, b) => a.tanggal.localeCompare(b.tanggal));
-
-    let tableHtml = `
-        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-        <head>
-            <meta charset="utf-8">
-            <style>
-                table { border-collapse: collapse; width: 100%; font-family: sans-serif; }
-                th, td { border: 1px solid #000; padding: 8px; text-align: left; }
-                th { background-color: #f2f2f2; font-weight: bold; }
-            </style>
-        </head>
-        <body>
-            <h3>Rekap Kehadiran Pegawai - Bulan ${val}</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Tanggal</th>
-                        <th>Nama Pegawai</th>
-                        <th>Jabatan</th>
-                        <th>Jam Masuk</th>
-                        <th>Jam Pulang</th>
-                        <th>Status</th>
-                        <th>Keterangan</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-
-    absen.forEach(a => {
-        let ket = a.status === 'hadir' ? (a.kegiatan || '-') : (a.alasan || '-');
-        let status = a.statusWaktu === 'terlambat' ? 'Terlambat' : a.status.toUpperCase();
-        
-        tableHtml += `
+    // --- rekap seluruh pegawai
+    const namaBulan = new Date(year, month - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+    $('info-rekap-bulan').textContent = `${namaBulan} • ${rekap.hariKerja} hari kerja (Senin-Jumat) sampai hari ini`;
+    $('tabel-rekap-bulanan').innerHTML = rekap.pegawai.length === 0 ? barisKosong(9, 'Belum ada pegawai.') :
+        rekap.pegawai.map(p => `
             <tr>
-                <td>${a.tanggal}</td>
-                <td>${a.nama}</td>
-                <td>${a.jabatan}</td>
+                <td>${esc(p.kode)}</td>
+                <td style="font-weight:600;">${esc(p.nama)}</td>
+                <td>${esc(p.jabatan)}</td>
+                <td>${p.hadir}</td><td>${p.terlambat}</td><td>${p.izin}</td><td>${p.sakit}</td><td>${p.cuti}</td>
+                <td style="color:${p.tanpaKeterangan ? 'var(--red)' : 'inherit'}; font-weight:${p.tanpaKeterangan ? 700 : 400};">${p.tanpaKeterangan}</td>
+            </tr>`).join('') + `
+            <tr style="font-weight:700; background:#f8fafc;">
+                <td colspan="3">TOTAL</td>
+                <td>${rekap.total.hadir}</td><td>${rekap.total.terlambat}</td><td>${rekap.total.izin}</td>
+                <td>${rekap.total.sakit}</td><td>${rekap.total.cuti}</td><td>${rekap.total.tanpaKeterangan}</td>
+            </tr>`;
+}
+
+// ==========================================
+// DETAIL HARIAN (GET /api/admin/absensi?tanggal)
+// ==========================================
+async function bukaDetailHarian(tglStr) {
+    switchPage('detail-harian', null);
+    $('judul-harian').textContent = `Kehadiran: ${new Date(tglStr + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`;
+    $('tabel-harian-admin').innerHTML = barisKosong(7, 'Memuat data...');
+    $('harian-hadir').textContent = $('harian-terlambat').textContent = $('harian-izin').textContent = '0';
+
+    let absen;
+    try { absen = (await Api.get(`/api/admin/absensi?tanggal=${tglStr}`)).data; }
+    catch (e) { $('tabel-harian-admin').innerHTML = barisKosong(7, e.message, 'var(--red)'); return; }
+
+    $('harian-hadir').textContent = absen.filter(a => a.status === 'hadir').length;
+    $('harian-terlambat').textContent = absen.filter(a => a.statusWaktu === 'terlambat').length;
+    $('harian-izin').textContent = absen.filter(a => a.status !== 'hadir').length;
+
+    if (absen.length === 0) { $('tabel-harian-admin').innerHTML = barisKosong(7, 'Belum ada pegawai yang absen pada tanggal ini.'); return; }
+
+    $('tabel-harian-admin').innerHTML = absen.map(a => {
+        let badge = 'badge-hadir';
+        if (a.status === 'izin' || a.status === 'cuti') badge = 'badge-izin';
+        if (a.status === 'sakit') badge = 'badge-absen';
+        if (a.statusWaktu === 'terlambat') badge = 'badge-terlambat';
+
+        const ket = a.status === 'hadir'
+            ? (a.kegiatan ? `<strong>Kegiatan:</strong> ${esc(a.kegiatan)}` : '<em>Tidak ada kegiatan</em>')
+            : `<strong>Alasan:</strong> ${esc(a.alasan || '-')}`;
+
+        let aksi = '';
+        if (a.fotoMasuk) aksi += `<button class="btn-aksi" onclick="showFoto('${esc(a.fotoMasuk)}')">Foto Masuk</button> `;
+        if (a.fotoPulang) aksi += `<button class="btn-aksi" style="margin-top:4px;" onclick="showFoto('${esc(a.fotoPulang)}')">Foto Pulang</button> `;
+        aksi += `<button class="btn-aksi btn-danger" style="margin-top:4px;" onclick="hapusAbsen(${a.id}, '${tglStr}')">Hapus</button>`;
+
+        return `
+            <tr>
+                <td style="font-weight:600;">${esc(a.nama)}</td>
+                <td>${esc(a.jabatan)}</td>
                 <td>${a.jamMasuk || '-'}</td>
                 <td>${a.jamPulang || '-'}</td>
-                <td>${status}</td>
-                <td>${ket}</td>
-            </tr>
-        `;
-    });
+                <td><span class="badge ${badge}">${a.statusWaktu === 'terlambat' ? 'TERLAMBAT' : esc(a.status.toUpperCase())}</span></td>
+                <td style="max-width:250px; font-size:13px;">${ket}</td>
+                <td>${aksi}</td>
+            </tr>`;
+    }).join('');
+}
 
-    tableHtml += `
-                </tbody>
-            </table>
-        </body>
-        </html>
-    `;
-
-    const blob = new Blob([tableHtml], { type: 'application/vnd.ms-excel' }); 
-    const url = URL.createObjectURL(blob); 
-    const link = document.createElement("a"); 
-    link.setAttribute("href", url); 
-    link.setAttribute("download", `Rekap_Absensi_${val}.xls`); 
-    document.body.appendChild(link); 
-    link.click(); 
-    document.body.removeChild(link);
+async function hapusAbsen(id, tglStr) {
+    if (!confirm('Apakah Anda yakin ingin menghapus data absensi pegawai ini?')) return;
+    try { await Api.del(`/api/admin/absensi/${id}`); bukaDetailHarian(tglStr); }
+    catch (e) { pesanError(e); }
 }
 
 // ==========================================
-// LOGIKA KELOLA AKUN
+// UNDUH REKAP (GET /api/admin/rekap/export)
 // ==========================================
-function renderDaftarAkun() {
-    const pegawai = getPegawai();
-    $('tabel-akun').innerHTML = pegawai.map((p, index) => `
-        <tr>
-            <td><strong>${p.username}</strong></td>
-            <td>${p.nama}</td>
-            <td>${p.jabatan}</td>
-            <td>
-                <button class="btn-aksi btn-danger" onclick="hapusAkun(${index})">Hapus</button>
-            </td>
-        </tr>
-    `).join('');
+async function unduhRekap(format) {
+    const val = $('filter-bulan-admin').value;
+    if (!val) return alert('Pilih bulan terlebih dahulu!');
+    try {
+        await Api.unduh(`/api/admin/rekap/export?bulan=${val}&format=${format}&jenis=detail`, `rekap-absensi-${val}.${format}`);
+    } catch (e) { pesanError(e); }
 }
 
-function simpanAkunBaru(e) {
+// ==========================================
+// KELOLA AKUN (CRUD /api/admin/pegawai)
+// ==========================================
+async function renderDaftarAkun() {
+    try {
+        const { data } = await Api.get('/api/admin/pegawai');
+        $('tabel-akun').innerHTML = data.length === 0 ? barisKosong(4, 'Belum ada akun pegawai.') : data.map(p => `
+            <tr>
+                <td><strong>${esc(p.username)}</strong><br><small style="color:var(--muted);">${esc(p.kode)}</small></td>
+                <td>${esc(p.nama)}</td>
+                <td>${esc(p.jabatan)}</td>
+                <td>
+                    <button class="btn-aksi" onclick="ubahAkun(${p.id})">Ubah</button>
+                    <button class="btn-aksi btn-danger" onclick="hapusAkun(${p.id}, '${esc(p.nama).replace(/'/g, '&#39;')}')">Hapus</button>
+                </td>
+            </tr>`).join('');
+    } catch (e) { pesanError(e); }
+}
+
+async function simpanAkunBaru(e) {
     e.preventDefault();
-    const id = $('new-id').value.trim().toUpperCase();
-    const nama = $('new-nama').value.trim();
-    const jabatan = $('new-jabatan').value.trim();
-    const username = $('new-username').value.trim().toLowerCase();
-    const password = $('new-password').value.trim();
-
-    const pegawai = getPegawai();
-    
-    if (pegawai.some(p => p.username === username)) {
-        alert('Username sudah digunakan! Silakan gunakan username lain.');
-        return;
-    }
-
-    pegawai.push({ id, nama, jabatan, username, password });
-    savePegawai(pegawai);
-    
-    alert('Akun berhasil dibuat! Pegawai bisa login dengan Username: ' + username);
-    $('form-buat-akun').reset();
-    renderDaftarAkun();
+    try {
+        const body = {
+            kode: $('new-id').value.trim(), nama: $('new-nama').value.trim(), jabatan: $('new-jabatan').value.trim(),
+            username: $('new-username').value.trim(), password: $('new-password').value,
+        };
+        const p = await Api.post('/api/admin/pegawai', body);
+        alert('Akun berhasil dibuat! Pegawai bisa login dengan Username: ' + p.username);
+        $('form-buat-akun').reset();
+        renderDaftarAkun();
+    } catch (err) { pesanError(err); }
 }
 
-function hapusAkun(index) {
-    if (!confirm('Apakah Anda yakin ingin menghapus akun ini?')) return;
-    const pegawai = getPegawai();
-    pegawai.splice(index, 1);
-    savePegawai(pegawai);
-    renderDaftarAkun();
+async function ubahAkun(id) {
+    try {
+        const p = await Api.get(`/api/admin/pegawai/${id}`);
+        const nama = prompt('Nama lengkap:', p.nama); if (nama === null) return;
+        const jabatan = prompt('Bidang / Jabatan:', p.jabatan); if (jabatan === null) return;
+        const password = prompt('Kata sandi baru (kosongkan jika tidak diubah, minimal 6 karakter):', ''); if (password === null) return;
+        await Api.put(`/api/admin/pegawai/${id}`, { nama: nama.trim(), jabatan: jabatan.trim(), ...(password ? { password } : {}) });
+        renderDaftarAkun();
+    } catch (e) { pesanError(e); }
 }
 
-function showFoto(src) {
-    $('img-preview').src = src;
-    $('modal-foto').classList.add('active');
+async function hapusAkun(id, nama) {
+    if (!confirm(`Hapus akun "${nama}"? Seluruh riwayat absensi pegawai ini juga akan terhapus.`)) return;
+    try { await Api.del(`/api/admin/pegawai/${id}`); renderDaftarAkun(); }
+    catch (e) { pesanError(e); }
+}
+
+// ==========================================
+// FOTO (GET /api/foto/:nama, butuh token)
+// ==========================================
+let fotoUrlAktif = null;
+async function showFoto(nama) {
+    try {
+        if (fotoUrlAktif) URL.revokeObjectURL(fotoUrlAktif);
+        fotoUrlAktif = await Api.urlFoto(nama);
+        $('img-preview').src = fotoUrlAktif;
+        $('modal-foto').classList.add('active');
+    } catch (e) { pesanError(e); }
+}
+
+// ==========================================
+// PENGATURAN PRESENSI (GET/PUT /api/admin/pengaturan)
+// ==========================================
+function perbaruiLinkMaps() {
+    const lat = $('set-lat').value.trim(), lon = $('set-lon').value.trim();
+    $('link-maps').href = `https://www.google.com/maps?q=${encodeURIComponent(lat)},${encodeURIComponent(lon)}`;
+}
+
+async function muatPengaturan() {
+    try {
+        const p = await Api.get('/api/admin/pengaturan');
+        $('set-lat').value = p.kantor.lat; $('set-lon').value = p.kantor.lon; $('set-radius').value = p.radiusMeter;
+        $('set-masuk').value = p.jamMasuk; $('set-terlambat').value = p.batasTerlambat; $('set-pulang').value = p.jamPulang;
+        $('pesan-pengaturan').textContent = '';
+        perbaruiLinkMaps();
+    } catch (e) { pesanError(e); }
+}
+
+async function simpanPengaturan(e) {
+    e.preventDefault();
+    const pesan = $('pesan-pengaturan');
+    try {
+        await Api.put('/api/admin/pengaturan', {
+            lat: $('set-lat').value.trim().replace(',', '.'), lon: $('set-lon').value.trim().replace(',', '.'),
+            radiusMeter: $('set-radius').value,
+            jamMasuk: $('set-masuk').value, batasTerlambat: $('set-terlambat').value, jamPulang: $('set-pulang').value,
+        });
+        pesan.style.color = 'var(--green)'; pesan.textContent = '✓ Pengaturan tersimpan dan langsung berlaku.';
+        muatPengaturan().then(() => { pesan.style.color = 'var(--green)'; pesan.textContent = '✓ Pengaturan tersimpan dan langsung berlaku.'; });
+    } catch (err) { pesan.style.color = 'var(--red)'; pesan.textContent = err.message; }
+}
+
+function pakaiLokasiSaya() {
+    if (!navigator.geolocation) return alert('Browser tidak mendukung GPS.');
+    navigator.geolocation.getCurrentPosition((pos) => {
+        $('set-lat').value = pos.coords.latitude.toFixed(6); $('set-lon').value = pos.coords.longitude.toFixed(6);
+        perbaruiLinkMaps();
+    }, () => alert('Lokasi tidak berhasil diperoleh. Izinkan akses lokasi di browser.'), { enableHighAccuracy: true, timeout: 15000 });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     loadBeranda();
+    // Tempel "lat, lon" dari Google Maps di kolom latitude -> otomatis terpisah ke dua kolom
+    $('set-lat').addEventListener('input', () => {
+        const m = $('set-lat').value.match(/^\s*(-?\d+(?:\.\d+)?)\s*[,;\s]\s*(-?\d+(?:\.\d+)?)\s*$/);
+        if (m) { $('set-lat').value = m[1]; $('set-lon').value = m[2]; }
+        perbaruiLinkMaps();
+    });
+    $('set-lon').addEventListener('input', perbaruiLinkMaps);
 });
