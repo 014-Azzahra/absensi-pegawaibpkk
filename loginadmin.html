@@ -1,106 +1,85 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Login Admin – Absensi PPNPN BPKK Kendari</title>
-<link rel="stylesheet" href="css/style.css">
-<style>
-  /* Sedikit penyesuaian khusus untuk halaman admin */
-  .login-left.admin-theme {
-    background-color: #0f172a; /* Warna biru sangat gelap / slate */
-  }
-  .login-left.admin-theme .half-circle {
-    background: #1e293b; /* Warna ornamen disesuaikan */
-  }
-  .btn-primary.admin-btn {
-    background: #0f172a;
-  }
-  .btn-primary.admin-btn:hover {
-    background: #1e293b;
-  }
-  .user-icon-wrapper.admin-icon {
-    background: #f1f5f9;
-    color: #0f172a;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Admin – Presensi PPNPN</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* CSS Tambahan khusus halaman login admin */
+        .login-split-layout { display: flex; height: 100vh; width: 100vw; margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .login-left { flex: 1; background: #1e293b; color: #fff; display: flex; flex-direction: column; justify-content: center; padding: 5vw; }
+        .login-right { flex: 1; display: flex; flex-direction: column; background: #fff; }
+        .form-container { flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 400px; width: 100%; margin: 0 auto; padding: 20px; }
+        .form-container h2 { font-size: 1.8rem; font-weight: 700; margin: 0 0 8px 0; color: #0f172a; }
+        .form-container p { color: #64748b; margin: 0 0 24px 0; }
+        .field { margin-bottom: 16px; }
+        .field label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; color: #0f172a; }
+        .input-with-icon { position: relative; display: flex; align-items: center; }
+        .input-with-icon .icon-left { position: absolute; left: 14px; color: #94a3b8; }
+        .input-with-icon input { width: 100%; padding: 12px 14px 12px 42px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; background: #f8fafc; transition: 0.3s; }
+        .input-with-icon input:focus { outline: none; border-color: #1a56db; background: #fff; box-shadow: 0 0 0 4px rgba(26,86,219,0.1); }
+        .btn-primary { background: #1e293b; color: white; border: none; border-radius: 8px; padding: 14px; font-weight: 600; font-size: 1rem; cursor: pointer; display: flex; justify-content: center; width: 100%; transition: 0.2s; }
+        .btn-primary:hover { background: #0f172a; }
+        @media(max-width: 768px) { .login-split-layout { flex-direction: column; } .login-left { display: none; } }
+    </style>
 </head>
 <body class="login-split-layout">
 
-<!-- Panel Kiri (Biru Gelap) -->
-<div class="login-left admin-theme">
-  <div class="left-content">
-    <div class="label-top">
-      <span class="line"></span> AREA ADMINISTRATOR
+    <!-- Panel Kiri -->
+    <div class="login-left">
+        <div style="max-width: 450px;">
+            <h1 style="font-size: 2.5rem; line-height: 1.2; margin-bottom: 20px;">Panel Administrator</h1>
+            <p style="font-size: 1.1rem; opacity: 0.8; line-height: 1.5;">Sistem manajemen presensi dan rekapitulasi kehadiran pegawai PPNPN BPKK Kendari.</p>
+        </div>
     </div>
-    <h1>Panel Kendali<br>Sistem Presensi</h1>
-    <p>Kelola data kehadiran, akun pegawai, dan unduh laporan PPNPN BPKK Kendari.</p>
-  </div>
-  
-  <!-- Ornamen Lingkaran & Titik -->
-  <div class="ornament-container">
-    <div class="ring ring-1"></div>
-    <div class="ring ring-2"></div>
-    <div class="ring ring-3"></div>
-    <div class="dot"></div>
-    <div class="half-circle"></div>
-  </div>
-</div>
 
-<!-- Panel Kanan (Form Login Admin) -->
-<div class="login-right">
-  
-  <div class="top-bar">
-    <img src="img/logo-bpkk.png" alt="Logo Kemnaker BPKK Kendari" class="logo-kemnaker">
-    <!-- Tautan kembali ke login pegawai -->
-    <a href="index.html" class="link-admin-top">Login sebagai pegawai</a>
-  </div>
+    <!-- Panel Kanan (Form) -->
+    <div class="login-right">
+        <div class="form-container">
+            <h2>Login Admin</h2>
+            <p>Masukkan kredensial khusus untuk mengakses panel admin.</p>
 
-  <div class="form-container">
-    <h2>Login Admin.</h2>
-    <p class="subtitle">Gunakan akun administrator Anda untuk mengakses panel kendali sistem.</p>
+            <form id="form-login-admin">
+                <div class="field">
+                    <label for="user">Username Admin</label>
+                    <div class="input-with-icon">
+                        <svg class="icon-left" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        <input id="user" type="text" placeholder="Username" required>
+                    </div>
+                </div>
 
-    <form action="admin.html" method="post">
-      
-      <div class="field">
-        <label for="user">Nama pengguna (Admin)</label>
-        <div class="input-with-icon">
-          <svg class="icon-left" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-          <input id="user" name="user" autocomplete="username" placeholder="Masukkan nama pengguna admin" required>
+                <div class="field" style="margin-bottom: 24px;">
+                    <label for="pass">Kata Sandi</label>
+                    <div class="input-with-icon">
+                        <svg class="icon-left" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        <input id="pass" type="password" placeholder="Password" required>
+                    </div>
+                </div>
+
+                <button class="btn-primary" type="submit">Masuk ke Panel Admin</button>
+            </form>
+
+            <div style="text-align: center; margin-top: 24px; font-size: 0.9rem;">
+                <a href="index.html" style="color: #64748b; text-decoration: none;">&larr; Kembali ke Login Pegawai</a>
+            </div>
         </div>
-      </div>
+    </div>
 
-      <div class="field">
-        <label for="pass">Kata sandi</label>
-        <div class="input-with-icon">
-          <svg class="icon-left" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-          <input id="pass" name="pass" type="password" autocomplete="current-password" placeholder="Masukkan kata sandi" required>
-          <svg class="icon-right" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-        </div>
-      </div>
+    <script>
+        document.getElementById('form-login-admin').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = document.getElementById('user').value.trim();
+            const pass = document.getElementById('pass').value;
 
-      <!-- Khusus admin biasanya tidak butuh "Ingat saya" untuk alasan keamanan, 
-           tapi saya biarkan jika Anda membutuhkannya -->
-      <div class="form-actions">
-        <label class="checkbox-label">
-          <input type="checkbox" name="remember"> Ingat saya
-        </label>
-      </div>
-
-      <button class="btn-primary block admin-btn" type="submit">
-        Masuk sebagai Admin
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 8px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-      </button>
-    </form>
-
-    <div class="divider"></div>
-
-    <p class="footer-hint">
-      Halaman ini hanya untuk administrator.<br>
-      <a href="index.html" class="link-admin-bottom">Kembali ke Login Pegawai</a>
-    </p>
-  </div>
-</div>
-
+            // LOGIN SEMENTARA (Username: admin, Password: admin123)
+            if (user === 'admin' && pass === 'admin123') {
+                localStorage.setItem('bpkk_admin_aktif', 'true');
+                window.location.href = 'admin.html';
+            } else {
+                alert('Username atau Password Admin salah!');
+            }
+        });
+    </script>
 </body>
 </html>

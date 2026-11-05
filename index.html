@@ -93,6 +93,7 @@ document.getElementById('form-login').addEventListener('submit', async function 
   try {
     const response = await fetch('js/data/pegawai.json');
     const pegawai = await response.json();
+    const dataPegawai = JSON.parse(localStorage.getItem('bpkk_pegawai_v2')) || [];
     const selected = pegawai.find(p => p.id.toLowerCase() === username || p.nama.toLowerCase() === username);
     if (!selected) {
       alert('Akun demo tidak ditemukan. Gunakan ID PPNPN001–PPNPN030 atau nama pegawai pada data dummy.');
